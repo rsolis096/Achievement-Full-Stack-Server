@@ -64,9 +64,11 @@ app.get("/", async (req : Request, res : Response) => {
 
     //Attempt to retreive from the database
     try{
-        await db.query("SELECT * from Games");
+        const result = await db.query("SELECT * from Games");
         //result is the game data that is to be loaded (they are all of type 'Game' and indexes by [])
         inDatabase = true;
+        console.log(result.rows)
+        res.send(result.rows);
     }
     catch(e){
         if(e instanceof Error ){
@@ -76,7 +78,7 @@ app.get("/", async (req : Request, res : Response) => {
     }
 
     //If it is not in the database then attempt to retreive from the SteamAPI
-    if(inDatabase){
+    if(inDatabase == false){
         try {
             //Get Library from SteamAPI
             const getUserLibrary : AxiosResponse = await axios.get<Game>(getOwnedAppsURL);          // Make a GET request to the Steam API /GetOwnedGames endpoint

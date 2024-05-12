@@ -32,7 +32,6 @@ db.connect();
 
 
 const webAPIKey : string = process.env.WEB_API_KEY as string;
-console.log("WEB API KEY", webAPIKey)
 const accessToken : string = process.env.ACCESS_TOKEN as string
 const steamID : string = process.env.STEAM_ID as string
 
@@ -67,7 +66,7 @@ app.get("/", async (req : Request, res : Response) => {
         const result = await db.query("SELECT * from Games");
         //result is the game data that is to be loaded (they are all of type 'Game' and indexes by [])
         inDatabase = true;
-        console.log(result.rows)
+        console.log("Database hit successfully!")
         res.send(result.rows);
     }
     catch(e){

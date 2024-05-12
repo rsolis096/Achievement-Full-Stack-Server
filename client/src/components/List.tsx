@@ -1,15 +1,13 @@
 import { useEffect, useState } from "react";
-import "../styles/App.css";
+import Item from "../components/Item.tsx";
+import "../styles/List.css";
 
 interface Game {
   name: string;
   appid: number;
 }
 
-const imageURL: string = "https://cdn.akamai.steamstatic.com/steam/apps/";
-const imageURLEnd: string = "/header.jpg";
-
-function App() {
+function List() {
   //const [count, setCount] = useState(0);
 
   const [backend, setBackendData] = useState<Game[]>([]);
@@ -28,23 +26,17 @@ function App() {
     fetchData();
   }, []);
 
-  console.log("FROM /API : ", backend);
-
-  const imageIds: number[] = backend.map((image) => {
-    return image.appid;
-  });
-
-  //console.log("NAMES ", images);
+  console.log("GAME DATA FROM /API : ", backend);
 
   return (
     <>
-      <div className="image-gallery">
-        {imageIds.map((id, index: number) => (
-          <img key={index} src={imageURL + id + imageURLEnd}></img>
+      <div className="game-box">
+        {backend.map((item) => (
+          <Item key={item.appid} appid={String(item.appid)} title={item.name} />
         ))}
       </div>
     </>
   );
 }
 
-export default App;
+export default List;

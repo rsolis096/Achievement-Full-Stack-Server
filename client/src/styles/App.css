@@ -1,5 +1,0 @@
-.image-gallery {
-  display: flex;
-  flex-direction: column;  /* Stacks flex items vertically */
-  align-items: center;     /* Center align items horizontally */
-}

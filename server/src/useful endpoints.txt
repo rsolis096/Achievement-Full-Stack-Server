@@ -1,0 +1,8 @@
+GetPlayerAchievements - Returns coded steam Achievement by appID for user with steamid
+https://api.steampowered.com/ISteamUserStats/GetPlayerAchievements/v1/?key=X&steamid=X&appid=X
+
+GetSchemaForGame - Returns Achievement descriptions for a game (Not associated with Steamid), includes icons
+https://api.steampowered.com/ISteamUserStats/GetSchemaForGame/v2/?key=&appid=
+
+GetOwnedGames - Returns a list of the players games
+https://api.steampowered.com/IPlayerService/GetOwnedGames/v1/?key=&steamid=&include_appinfo=true

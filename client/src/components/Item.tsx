@@ -1,7 +1,6 @@
-import "../styles/Item.css";
-
-import Card from "react-bootstrap/Card";
 import Button from "react-bootstrap/Button";
+
+import "../styles/Item.css";
 
 interface ItemProps {
   title: string;
@@ -20,17 +19,18 @@ function getImageURL(id: string) {
 function Item(props: ItemProps) {
   return (
     <>
-      <Card style={{ width: "18rem" }}>
-        <Card.Img variant="top" src={getImageURL(props.appid)} />
-        <Card.Body>
-          <Card.Title>{props.title}</Card.Title>
-          <Card.Text>
+      <div className="custom-card">
+        <img className="card-image" src={getImageURL(props.appid)} />
+
+        <div className="card-body">
+          <h2>{props.title}</h2>
+          <p>
             Some quick example text to build on the card title and make up the
             bulk of the card's content.
-          </Card.Text>
+          </p>
           <Button variant="primary">Go somewhere</Button>
-        </Card.Body>
-      </Card>
+        </div>
+      </div>
     </>
   );
 }

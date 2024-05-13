@@ -46,92 +46,128 @@ app.use(express.urlencoded({ extended : true }));
 interface Game{
     appid : number,
     name: string,
-    capsule_imagev5: string,
     playtime_forever: number,
     img_icon_url: string
+    has_community_visible_stats: boolean
 }
 
-app.get("/api", (req : Request, res : Response) => {
-    console.log("API endpoint hit");
-    res.json({apple : "fruit"});
-})
+interface Achievement{
+    name: string,
+    displayName: string,
+    description: string ,
+    icon: string,
+    icongray: string         
+}
 
 // Define a route for handling GET requests to the root URL
 app.get("/", async (req : Request, res : Response) => {
 
     var inDatabase : boolean = false;
 
-    //Attempt to retreive from the database
-    try{
+    //Attempt to retrieve steam library from the database
+    try{     
         const result = await db.query("SELECT * from Games");
-        //result is the game data that is to be loaded (they are all of type 'Game' and indexes by [])
-        inDatabase = true;
-        console.log("Database hit successfully!")
-        res.send(result.rows);
-    }
-    catch(e){
-        if(e instanceof Error ){
-            console.error("Failed to make request:", e.message);
+        if(result.rows.length == 0){
+            console.log("Database empty, calling steam API")
         }
-        res.send("<h1>Failed to make request:</h1>");
+        else{
+            inDatabase = true;
+            console.log("Game data retrieved from database.")
+            res.send(result.rows)
+        }
+
+    }catch(e){
+        let m :string = "";
+        if(e instanceof Error ){
+            m = e.message;
+            console.error("Failed to make database query:", e.message);
+        }
+        res.status(500).send(m);
+        return;
     }
 
-    //If it is not in the database then attempt to retreive from the SteamAPI
+    //If it is not in the database then attempt to retrieve from the SteamAPI
     if(inDatabase == false){
+
+        var userLibrary : Game [] = [];
+
+        //Attempt to retrieve steam library from Steam API
         try {
             //Get Library from SteamAPI
-            const getUserLibrary : AxiosResponse = await axios.get<Game>(getOwnedAppsURL);          // Make a GET request to the Steam API /GetOwnedGames endpoint
-            var userLibrary : Game [] = getUserLibrary.data.response.games;
-    
-            //Collect app image from SteamAPI
-            for (let i = userLibrary.length - 1; i > userLibrary.length - 3 ; i--) {
-                //Get the image URL from steam
-                const appIDResponse = await axios.get(getAppDetailsURL + userLibrary[i].appid);
-                const appid : number = userLibrary[i].appid;
-                userLibrary[i].capsule_imagev5 = appIDResponse.data[appid].data.capsule_imagev5;
-            }
+            const response : AxiosResponse = await axios.get<Game>(getOwnedAppsURL);          // Make a GET request to the Steam API /GetOwnedGames endpoint  
+            userLibrary = response.data.response.games;
 
-            const tempLibrary : Game[]= [
-                userLibrary[userLibrary.length - 1],
-                userLibrary[userLibrary.length - 2],
-                userLibrary[userLibrary.length - 3],
-            ]
-
-            userLibrary = tempLibrary;
-            console.log(userLibrary);
-
-            //Write The data retrieved from the API to the database
-            try {
-                await Promise.all(userLibrary.map(game => {
-                    db.query("INSERT INTO games (appid, name, playtime_forever, img_icon_url, capsule_imagev5) VALUES ($1, $2, $3, $4, $5)", [game.appid, game.name, game.playtime_forever, game.img_icon_url, game.capsule_imagev5 ]);
-                }))
-            } catch (e) {
-                if(e instanceof Error ){
-                    // Log an error message if the request fails
-                    console.error("Failed to make query to database:", e.message);
-                }
-            }    
+            //Filter out games without achievements
+            userLibrary = userLibrary.filter((game) =>
+                  game.has_community_visible_stats === true
+            );
             
-            // Render the 'index.ejs' template
-            res.render(
-                "index.ejs", 
-                { 
-                    game_count: 3,
-                    game_names: userLibrary.map( (game : Game) => game.name),
-                    game_images: userLibrary.map( (game : Game) => game.capsule_imagev5),
-                    game_deals: userLibrary.map( (game : Game) => game.appid)
-                }
-            );  
-    
-        } catch ( e) {
+        } catch(e){
+            let m :string = "";
             if(e instanceof Error ){
-            // Log an error message if the request fails
-            console.error("Failed to make request:", e.message);
+                m = e.message;
+                console.error("Failed to make request to Steam API:", e.message);
             }
-            // Render the 'index.ejs' template
-            res.send("<h1>Failure</h1>");
+            res.status(500).send(m);
+            return;
         }
+
+        //If the user has games, write it to the database
+        if(userLibrary.length != 0){
+            try {
+
+                //Write the game list data retrieved from the API to the database
+                await Promise.all(userLibrary.map(game => {
+                    db.query("INSERT INTO games (appid, name, playtime_forever, has_community_visible_stats) VALUES ($1, $2, $3, $4)", [game.appid, game.name, game.playtime_forever, game.has_community_visible_stats]);
+                }))
+
+            } catch(e){
+                let m :string = "";
+                if(e instanceof Error ){
+                    m = e.message;
+                    console.error("Failed to write user library to database:", e.message);
+                }
+                res.status(500).send(m);
+                return;
+            }
+
+            //For each game, get the achievment data and write to the database
+            userLibrary.forEach(async (game) =>{
+                try{
+                    const response : AxiosResponse = await axios.get(`https://api.steampowered.com/ISteamUserStats/GetSchemaForGame/v2/?key=${webAPIKey}&appid=${game.appid}`);    
+                    let gameAchievements : Achievement [] = []
+                    
+                    //Verify JSON format
+                    if(response.data.game && response.data.game.availableGameStats && response.data.game.availableGameStats.achievements){
+                        gameAchievements = response.data.game.availableGameStats.achievements;
+                    }
+                    else if(response.data.playerstats && response.data.playerstats.achievements){
+                        gameAchievements = response.data.playerstats.achievements;
+                    }
+                    
+                    //Write achievement JSON to database
+                    await Promise.all(gameAchievements.map( (ach : Achievement) => {
+                        if(ach != null){
+                            db.query("Update games set achievements = $1 where appid = $2", [ach, game.appid]);
+                        }
+                    }))
+
+                } catch(e){
+                    let m :string = "";
+                    if(e instanceof Error ){
+                        m = e.message;
+                        console.error("Failed to write user achievements to database:", e.message);
+                    }
+                    res.status(500).send(m);
+                    return;
+                }
+            })
+        }
+
+        res.status(200).send(userLibrary);
+        return;
     }
+
 });
 
 app.listen(port, () => {

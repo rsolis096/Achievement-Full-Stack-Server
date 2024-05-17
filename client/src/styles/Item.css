@@ -1,4 +1,4 @@
-.custom-card {
+.custom-card-upper {
     background: rgb(46, 46, 46);
     border-color: white;
     color : white;
@@ -11,6 +11,17 @@
     border-radius: 25px;
 }
 
+.custom-card{
+    display: block;
+    background: rgb(46, 46, 46);
+    border-color: white;
+    color : white;
+    margin-bottom: 1rem;
+
+	flex-direction: row; 
+	flex-wrap: wrap; 
+}
+
 .card-image {
     border-radius: 25px;
     height: 35%;
@@ -20,4 +31,11 @@
 .card-body{
     margin-left: 1rem;
     width: 500px;
+}
+
+.achievements-body{
+}
+
+li{
+    list-style: none;
 }

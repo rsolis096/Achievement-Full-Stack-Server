@@ -122,7 +122,7 @@ const transformToGame = (apiGame: any): Game => {
 
 // Function to save games to the database
 const saveGamesToDB = async (games: Game[]): Promise<void> => {
-
+    
     const queryText = 'INSERT INTO games (appid, name, playtime_forever, has_community_visible_stats, achievements) VALUES ($1, $2, $3, $4, $5)';
     const queryPromises = games.map(game => {
         return db.query(queryText, [
@@ -133,7 +133,6 @@ const saveGamesToDB = async (games: Game[]): Promise<void> => {
             JSON.stringify(game.achievements) // Ensure achievements are properly serialized as JSON
         ]);
     });
-    
     await Promise.all(queryPromises);
 };
 

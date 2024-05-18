@@ -2,10 +2,11 @@ import { useState } from "react";
 
 import Button from "react-bootstrap/Button";
 import Collapse from "react-bootstrap/Collapse";
+import AchievementItem from "./AchievementItem";
 
 import "../styles/Item.css";
 
-interface ItemProps {
+interface GameCardProps {
   game: Game;
 }
 
@@ -35,12 +36,16 @@ function getImageURL(id: string) {
 }
 
 //Display the game and its image
-function Item(props: ItemProps) {
+function GameCard(props: GameCardProps) {
   const [displayAchievements, setDisplayAchievements] =
     useState<boolean>(false);
 
   const listItems = props.game.achievements.map((a) => (
-    <li key={a.name}>{a.displayName}</li>
+    <AchievementItem
+      key={a.name}
+      item={a}
+      appid={props.game.appid}
+    ></AchievementItem>
   ));
 
   const buttonListener = () => {
@@ -67,9 +72,7 @@ function Item(props: ItemProps) {
 
         <Collapse in={displayAchievements}>
           <div className="achievements-body">
-            {displayAchievements == true && (
-              <ul className="achievements-item">{listItems}</ul>
-            )}
+            <ul className="achievements-item">{listItems}</ul>
           </div>
         </Collapse>
       </div>
@@ -77,4 +80,4 @@ function Item(props: ItemProps) {
   );
 }
 
-export default Item;
+export default GameCard;

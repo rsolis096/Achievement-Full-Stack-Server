@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import Item from "../components/Item.tsx";
+import GameCard from "./GameCard.tsx";
 import "../styles/List.css";
 
 interface Achievement {
@@ -43,7 +43,7 @@ function List() {
       <div className="game-list">
         <ul>
           {userLibraryState.map((item) => (
-            <Item key={item.appid} game={item} />
+            <GameCard key={item.appid} game={item} />
           ))}
         </ul>
       </div>

@@ -12,7 +12,13 @@ const port = 3000;
 // Serve static files from the 'public' directory
 app.use(express.static("public"));
 
-//Enable CORS
+// Parse URL-encoded bodies (as sent by HTML forms)
+app.use(express.urlencoded({ extended : true }));
+
+//
+app.use(express.json());
+
+//Enable CORS (Needed to access local database)
 app.use(cors({
     origin: 'http://localhost:5173'
 }));
@@ -38,9 +44,8 @@ const steamID : string = process.env.STEAM_ID as string
 // Define the URL of the Steam API endpoint (for getOwned Apps)
 const getOwnedAppsURL : string = `https://api.steampowered.com/IPlayerService/GetOwnedGames/v1/?access_token=${accessToken}&steamid=${steamID}&include_appinfo=true`;
 const getAppDetailsURL : string = "https://store.steampowered.com/api/appdetails?appids=";
+const getUserAchievmentsURL: string = `https://api.steampowered.com/ISteamUserStats/GetPlayerAchievements/v1/?key=${webAPIKey}&steamid=${steamID}&appid=`
 
-// Parse URL-encoded bodies (as sent by HTML forms)
-app.use(express.urlencoded({ extended : true }));
 
 interface Achievement{
     icon: string,
@@ -48,6 +53,12 @@ interface Achievement{
     icongray: string,
     description: string,
     displayName: string,
+}
+
+interface UserAchievement{
+    apiname: string
+    achieved: number,
+    unlocktime: string
 }
 
 interface Game{
@@ -67,7 +78,7 @@ const handleError = (res: Response, error: Error, message: string) => {
 
 // Function to retrieve game library from the database
 const getGamesFromDB = async (): Promise<Game[]> => {
-    const result = await db.query("SELECT * from Games");
+    const result = await db.query("SELECT appid, name, playtime_forever, has_community_visible_stats, achievements from Games");
     return result.rows;
 }
 
@@ -159,7 +170,6 @@ app.get("/", async (req : Request, res : Response) => {
             //If the API returned a Library then write it to the database
             await saveGamesToDB(gamesFromAPI)
         }
-        console.log("APPLE");
         return res.status(200).send(gamesFromAPI);
     }
     catch(error){
@@ -168,10 +178,46 @@ app.get("/", async (req : Request, res : Response) => {
 
 });
 
+
+// Define a route for handling GET requests to the root URL
+app.post("/getStuff", async (req : Request, res : Response) => {
+
+    try{
+        //Attempt to retrive achievment list from database
+        const result = await db.query(`SELECT user_achievements FROM games WHERE appid=${req.body.appid}`);
+        const achievementsFromDB : UserAchievement[] = result.rows[0]?.user_achievements || [];
+
+        //If the user achievement data came from the database then return it to the user
+        if (achievementsFromDB.length > 0) {
+            console.log('User Achievement data retrieved from database for appid ', req.body.appid);
+            return res.send(achievementsFromDB);
+        }
+
+        //Database retrieval failed, get from SteamAPI
+        console.log('Database empty, calling Steam API.');
+    
+        var achievementsFromAPI : UserAchievement[] = []
+        const response : AxiosResponse = await axios.get<Achievement>(getUserAchievmentsURL.concat(req.body.appid.toString()));       
+        achievementsFromAPI = response.data.playerstats.achievements;
+
+        if(achievementsFromAPI.length > 0){
+            //If the API returned a Library then write it to the database
+            const queryText = `Update games set user_achievements = $1 where appid = $2`;
+            db.query(queryText, [JSON.stringify(achievementsFromAPI), req.body.appid])
+        }
+        
+        return res.send(achievementsFromAPI);
+    }
+    catch(error){
+        handleError(res, error as Error, 'An error occurred while processing the request.');
+    }
+});
+
 app.listen(port, () => {
 console.log(`Server running on port: ${port}`);
 });
 
+//Update games set user_achievements = NULL
 
 
 

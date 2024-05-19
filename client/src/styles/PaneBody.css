@@ -1,0 +1,42 @@
+
+
+/* Individual achievement card */
+.ach-card {
+display: flex;
+align-items: center;
+padding: 5px;
+margin-bottom: 5px; /* Minimal space between cards */
+background-color: #333; /* Slightly lighter background for the items */
+}
+
+.ach-card:hover{
+    background-color: #626262;
+    transform: scale(1.05);
+}
+
+/* Achievement icon */
+.ach-image {
+width: 40px; /* Smaller size for the icon */
+height: 40px;
+margin-right: 10px; /* Space between icon and text */
+object-fit: cover; /* Ensure the image covers the area */
+}
+
+/* Achievement text container */
+.ach-body {
+display: flex;
+flex-direction: column;
+}
+
+/* Achievement title */
+.ach-body h3 {
+font-size: 16px; /* Smaller font size */
+font-weight: bold;
+margin: 0;
+}
+
+/* Achievement description */
+.ach-body p {
+font-size: 12px; /* Smaller font size */
+margin: 2px 0 0 0;
+}

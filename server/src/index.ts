@@ -205,7 +205,7 @@ app.post("/getStuff", async (req : Request, res : Response) => {
             const queryText = `Update games set user_achievements = $1 where appid = $2`;
             db.query(queryText, [JSON.stringify(achievementsFromAPI), req.body.appid])
         }
-        
+        console.log('User Achievement data retrieved from steamAPI for appid ', req.body.appid);
         return res.send(achievementsFromAPI);
     }
     catch(error){

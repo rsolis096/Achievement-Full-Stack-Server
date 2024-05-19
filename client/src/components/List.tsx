@@ -1,5 +1,13 @@
 import { useEffect, useState } from "react";
-import GameCard from "./GameCard.tsx";
+import TabItem from "./TabItem.tsx";
+
+import Col from "react-bootstrap/Col";
+import Nav from "react-bootstrap/Nav";
+import Row from "react-bootstrap/Row";
+import Tab from "react-bootstrap/Tab";
+
+import PaneItem from "./PaneItem";
+
 import "../styles/List.css";
 
 interface Achievement {
@@ -38,15 +46,32 @@ function List() {
     fetchData();
   }, []);
 
+  const tabItems = userLibraryState.map((item) => (
+    <TabItem key={item.appid} game={item} />
+  ));
+
+  //For each game for each achievement
+  const tabPaneItems = userLibraryState.map((game) => (
+    <PaneItem
+      key={game.appid}
+      name={game.name}
+      appid={game.appid}
+      items={game.achievements}
+    />
+  ));
+
   return (
     <>
-      <div className="game-list">
-        <ul>
-          {userLibraryState.map((item) => (
-            <GameCard key={item.appid} game={item} />
-          ))}
-        </ul>
-      </div>
+      <Tab.Container>
+        <Row>
+          <Col sm={3}>
+            <Nav variant="pills">{tabItems}</Nav>
+          </Col>
+          <Col sm={8}>
+            <Tab.Content>{tabPaneItems}</Tab.Content>
+          </Col>
+        </Row>
+      </Tab.Container>
     </>
   );
 }

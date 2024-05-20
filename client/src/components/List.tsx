@@ -6,26 +6,11 @@ import Nav from "react-bootstrap/Nav";
 import Row from "react-bootstrap/Row";
 import Tab from "react-bootstrap/Tab";
 
-import PaneItem from "./PaneItem";
+import PaneItem from "./PaneBody.tsx";
+
+import { Game } from "../interfaces/types.tsx";
 
 import "../styles/List.css";
-
-interface Achievement {
-  icon: string;
-  name: string;
-  icongray: string;
-  description: string;
-  displayName: string;
-}
-
-interface Game {
-  appid: number;
-  name: string;
-  playtime_forever: number;
-  img_icon_url: string;
-  has_community_visible_stats: boolean;
-  achievements: Achievement[];
-}
 
 function List() {
   //const [count, setCount] = useState(0);
@@ -33,6 +18,7 @@ function List() {
   const [userLibraryState, setUserLibraryState] = useState<Game[]>([]);
 
   //Fetch the game data from the backend (API or Database determined by server)
+  //Needs to be done upon render of list, so useEffect is used
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -62,12 +48,38 @@ function List() {
 
   return (
     <>
+      <Nav variant="tabs" defaultActiveKey="/home">
+        <Nav.Item>
+          <Nav.Link href="">Steam</Nav.Link>
+        </Nav.Item>
+        <Nav.Item>
+          <Nav.Link eventKey="link-1">PlayStation</Nav.Link>
+        </Nav.Item>
+      </Nav>
+
       <Tab.Container>
         <Row>
-          <Col sm={3}>
+          <Col xs={1} sm={2} md={1} lg={2} xl={3} xxl={2} className="nav-games">
+            <h3 className="games-column">Games</h3>
             <Nav variant="pills">{tabItems}</Nav>
           </Col>
-          <Col sm={8}>
+          <Col
+            xs={3}
+            sm={3}
+            md={3}
+            lg={3}
+            xl={5}
+            xxl={3}
+            className="nav-achievements"
+          >
+            <h3 className="achievements-column">Achievements</h3>
+
+            <Row className="achievements-header">
+              <Col xl={2}>Image</Col>
+              <Col xl={7}>Name and Description</Col>
+              <Col xl={1}>Unlocked</Col>
+            </Row>
+
             <Tab.Content>{tabPaneItems}</Tab.Content>
           </Col>
         </Row>

@@ -1,25 +1,9 @@
 import Nav from "react-bootstrap/Nav";
 import "../styles/TabItem.css";
+import { Game } from "../interfaces/types";
 
 interface TabItemProps {
   game: Game;
-}
-
-interface Achievement {
-  icon: string;
-  name: string;
-  icongray: string;
-  description: string;
-  displayName: string;
-}
-
-interface Game {
-  appid: number;
-  name: string;
-  playtime_forever: number;
-  img_icon_url: string;
-  has_community_visible_stats: boolean;
-  achievements: Achievement[];
 }
 
 const imageURL: string = "https://cdn.akamai.steamstatic.com/steam/apps/";

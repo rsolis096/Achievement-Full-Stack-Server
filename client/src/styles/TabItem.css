@@ -30,6 +30,11 @@
     display: flex;
     align-items: center; /* Center vertically */
     gap: 5px; /* Space between image and title */
+
+    height: 25px;
+    width: 300px;
+    max-height: 75px;
+    max-width: 300px; /* Set your desired maximum width here */
 }
 
 .tab-image {
@@ -44,13 +49,6 @@
     margin: 0;
 }
 
-.nav-link-custom .tab-content {
-    height: 25px;
-    width: 300px;
-    max-height: 75px;
-    max-width: 300px; /* Set your desired maximum width here */
-}
-
 .tab-content{
     color:white;
 }
@@ -63,6 +61,7 @@
 .nav-link-custom { 
     position:relative; 
 }
+
 .nav-link-custom:after {
     content:'';
     position:absolute;

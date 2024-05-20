@@ -1,91 +1,44 @@
-import { useState } from "react";
+//This Component describes the actual individual items of the achievement list
+//This component handles only one individual achievement item per instance
+import Col from "react-bootstrap/Col";
+import "../styles/PaneBody.css";
+import { Achievement, UserAchievement } from "../interfaces/types";
 
-import Tab from "react-bootstrap/Tab";
-import PaneBody from "../components/PaneBody";
-
-interface Achievement {
-  icon: string;
-  name: string;
-  icongray: string;
-  description: string;
-  displayName: string;
-}
-
-interface UserAchievement {
-  apiname: string;
-  achieved: number;
-  unlocktime: number;
-}
-
-interface PaneItemProps {
-  items: Achievement[];
+interface AchivementItemProps {
+  item: Achievement;
   appid: number;
-  name: string;
+  unlock_info: UserAchievement;
 }
 
-function PaneItem(props: PaneItemProps) {
-  const [userAchievementData, setUserAchievementData] = useState<
-    UserAchievement[]
-  >([]);
-
-  //Make a post request when this item is made to get user achievement data
-  const postData = async () => {
-    try {
-      //Send the appid to the server (access token and steamid also needed)
-      const response = await fetch("http://localhost:3000/getStuff", {
-        method: "POST",
-        headers: {
-          // Tells the server that the client expects JSON in response
-          Accept: "application/json",
-          // Indicates that the request body is JSON
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          appid: props.appid,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Network response was not ok");
-      }
-
-      //Convert response into Javascript object
-      const responseData = await response.json(); // parses JSON response into native JavaScript objects
-      //Display the data returned by the server
-      setUserAchievementData(responseData);
-    } catch (error) {
-      console.error("Error fetching data:", error);
-    }
-  };
-
-  const defaultAchievement: UserAchievement = {
-    apiname: "null",
-    achieved: 0,
-    unlocktime: 0,
-  };
-
-  console.log(userAchievementData);
-  //Returns an individual Achievment item
-  const AchievementItems = props.items.map((a, index) => (
-    <PaneBody
-      key={a.name}
-      item={a}
-      unlock_info={
-        userAchievementData.length > 0
-          ? userAchievementData[index]
-          : [defaultAchievement]
-      }
-      appid={props.appid}
-    ></PaneBody>
-  ));
-
-  //Run a function here that gets achievement info and passes it into pane body
-
+function PaneItem(props: AchivementItemProps) {
   return (
     <>
-      <Tab.Pane onEnter={postData} eventKey={props.appid}>
-        {AchievementItems}
-      </Tab.Pane>
+      <div className="ach-card" key={props.appid}>
+        <Col xl={1}>
+          <img
+            className="ach-image"
+            src={
+              props.unlock_info.achieved === 1
+                ? props.item.icon
+                : props.item.icongray
+            }
+            alt={props.item.displayName}
+          />
+        </Col>
+
+        <Col xl={8}>
+          <div className="ach-body">
+            <h3>{props.item.displayName}</h3>
+            <p>{props.item.description}</p>
+          </div>
+        </Col>
+
+        <Col xl={4} className="unlock-info">
+          <p>
+            Unlocked : {props.unlock_info.achieved === 1 ? "True" : "False"}
+          </p>
+        </Col>
+      </div>
     </>
   );
 }

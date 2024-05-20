@@ -1,0 +1,21 @@
+.nav-games {
+    padding: 10px;
+    margin: 0;
+}
+  
+.nav-achievements{
+  padding: 15px; /* Optional: Add padding inside the border */
+}
+
+.games-column{
+    color: white;
+}
+
+.achievements-column{
+    color:white;
+}
+
+.achievements-header{
+    color:white;
+    text-decoration: underline;
+}

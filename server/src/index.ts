@@ -1,10 +1,18 @@
+// src/index.ts
+import app from './app.js';
+
+const port = 3000;
+
+app.listen(port, () => {
+    console.log(`Server running on port: ${port}`);
+});
+
+/*
 import express, {Response, Request} from "express";
 import axios, { AxiosResponse } from "axios";
 import env from "dotenv";
 import cors from "cors";
 import pg from "pg";
-
-//http://media.steampowered.com/steamcommunity/public/images/apps/{appid}/{hash}.jpg
 
 const app = express();
 const port = 3000;
@@ -178,8 +186,7 @@ app.get("/", async (req : Request, res : Response) => {
 
 });
 
-
-// Define a route for handling GET requests to the root URL
+// Get Achievement Info with respect to the user
 app.post("/getStuff", async (req : Request, res : Response) => {
 
     try{
@@ -216,13 +223,4 @@ app.post("/getStuff", async (req : Request, res : Response) => {
 app.listen(port, () => {
 console.log(`Server running on port: ${port}`);
 });
-
-//Update games set user_achievements = NULL
-
-
-
-/*
-    //GET the lowest price from cheapshark API
-    const gameDeal = await axios.get (`https://www.cheapshark.com/api/1.0/games?steamAppID=${userLibrary[i].appid}`);
-    appDeals.push(gameDeal.data[0].cheapest);
 */

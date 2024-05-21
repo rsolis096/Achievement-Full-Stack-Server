@@ -1,7 +1,7 @@
 //This Component describes the actual individual items of the achievement list
 //This component handles only one individual achievement item per instance
 import Col from "react-bootstrap/Col";
-import "../styles/PaneBody.css";
+import "../styles/PaneItem.css";
 import { Achievement, UserAchievement } from "../interfaces/types";
 
 interface AchivementItemProps {

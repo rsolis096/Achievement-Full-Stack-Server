@@ -1,12 +1,11 @@
 import { useEffect, useState } from "react";
 import TabItem from "./TabItem.tsx";
+import PaneBody from "./PaneBody.tsx";
 
 import Col from "react-bootstrap/Col";
 import Nav from "react-bootstrap/Nav";
 import Row from "react-bootstrap/Row";
 import Tab from "react-bootstrap/Tab";
-
-import PaneItem from "./PaneBody.tsx";
 
 import { Game } from "../interfaces/types.tsx";
 
@@ -38,7 +37,7 @@ function List() {
 
   //For each game for each achievement
   const tabPaneItems = userLibraryState.map((game) => (
-    <PaneItem
+    <PaneBody
       key={game.appid}
       name={game.name}
       appid={game.appid}

@@ -78,7 +78,7 @@ const handleError = (res: Response, error: Error, message: string) => {
 
 // Function to retrieve game library from the database
 const getGamesFromDB = async (): Promise<Game[]> => {
-    const result = await db.query("SELECT appid, name, playtime_forever, has_community_visible_stats, achievements from Games");
+    const result = await db.query("SELECT appid, name, playtime_forever, has_community_visible_stats, achievements FROM games LIMIT 10");
     return result.rows;
 }
 

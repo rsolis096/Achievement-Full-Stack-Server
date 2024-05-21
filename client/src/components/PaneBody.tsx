@@ -7,7 +7,7 @@ import Tab from "react-bootstrap/Tab";
 import PaneItem from "./PaneItem";
 import { Achievement, UserAchievement } from "../interfaces/types";
 
-import "../styles/PaneItem.css";
+import "../styles/PaneBody.css";
 
 interface PaneBodyProps {
   items: Achievement[];

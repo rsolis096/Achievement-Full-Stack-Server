@@ -1,8 +1,9 @@
 import Nav from "react-bootstrap/Nav";
-import "../styles/TabItem.css";
 import { Game } from "../interfaces/types";
 
-interface TabItemProps {
+import "../styles/GameItem.css";
+
+interface GameItemProps {
   game: Game;
 }
 
@@ -15,7 +16,7 @@ function getImageURL(id: string) {
 }
 
 //Display the game and its image
-function TabItem(props: TabItemProps) {
+function GameItem(props: GameItemProps) {
   return (
     <>
       <Nav.Item className="nav-item-custom">
@@ -33,4 +34,4 @@ function TabItem(props: TabItemProps) {
   );
 }
 
-export default TabItem;
+export default GameItem;

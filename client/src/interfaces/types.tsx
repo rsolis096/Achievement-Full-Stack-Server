@@ -10,14 +10,20 @@ export interface UserAchievement {
   apiname: string;
   achieved: number;
   unlocktime: number;
+
+  percent?: number;
+  otherName?: string;
+
+  icon?: string;
+  name?: string;
+  icongray?: string;
+  description?: string;
+  displayName?: string;
 }
 
-export interface Achievement {
-  icon: string;
+export interface GlobalAchievement {
   name: string;
-  icongray: string;
-  description: string;
-  displayName: string;
+  percent: number;
 }
 
 export interface Game {

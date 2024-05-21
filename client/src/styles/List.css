@@ -1,10 +1,13 @@
 .nav-games {
     padding: 10px;
     margin: 0;
+    background-color: rgba(0, 0, 0, 0)!important;
 }
   
 .nav-achievements{
   padding: 15px; /* Optional: Add padding inside the border */
+  background-color: rgba(0, 0, 0, 0)!important;
+
 }
 
 .games-column{
@@ -12,10 +15,10 @@
 }
 
 .achievements-column{
-    color:black;
+    color:white;
 }
 
-.achievements-header{
-    color:white;
-    text-decoration: underline;
+.test-list-group{
+    background-color: rgba(0, 0, 0, 0)!important;
 }
+

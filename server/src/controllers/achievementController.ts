@@ -31,7 +31,7 @@ export const getUserAchievements = async (req: Request, res: Response) => {
             return res.send(achievementsFromDB);
         }
 
-        console.log('Database empty, calling Steam API.');
+        console.log('User Achievement database empty, calling Steam API.');
         const response: AxiosResponse = await axios.get(getUserAchievementsURL.concat(req.body.appid.toString()));
         const achievementsFromAPI: UserAchievement[] = response.data.playerstats.achievements;
 
@@ -49,17 +49,20 @@ export const getUserAchievements = async (req: Request, res: Response) => {
 export const getGlobalAchievements = async (req: Request, res: Response) => {
     try {
         const result = await db.query(`SELECT global_achievements FROM games WHERE appid=${req.body.appid}`);
-        const globalAchievementsFromDB: UserAchievement[] = result.rows[0]?.user_achievements || [];
+        const globalAchievementsFromDB: GlobalAchievement[] = result.rows[0]?.global_achievements || [];
 
+        //Attempt to get global achievement data from the database first
         if (globalAchievementsFromDB.length > 0) {
-            console.log('User Achievement data retrieved from database for appid', req.body.appid);
+            console.log('Global Achievement data retrieved from database for appid', req.body.appid);
             return res.send(globalAchievementsFromDB);
         }
 
+        //If nothing was returned then get the global achievement data from the steam API
         console.log('Global Achievement Database empty, calling Steam API.');
         const response: AxiosResponse = await axios.get(getGlobalAchievementsURL.concat(req.body.appid.toString()));
         const globalAchievementsFromAPI: GlobalAchievement[] = response.data.achievementpercentages.achievements;
 
+        //Update the database with the retrieved info
         if (globalAchievementsFromAPI.length > 0) {
             const queryText = 'UPDATE games SET global_achievements = $1 WHERE appid = $2';
             await db.query(queryText, [JSON.stringify(globalAchievementsFromAPI), req.body.appid]);

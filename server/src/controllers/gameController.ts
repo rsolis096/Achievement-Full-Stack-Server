@@ -33,11 +33,11 @@ export const getOwnedGames = async (req: Request, res: Response) => {
         let gamesFromDB: Game[] = result.rows;
 
         if (gamesFromDB.length > 0) {
-            console.log('Games data retrieved from database');
+            console.log('Owned Game data retrieved from database');
             return res.status(200).send(gamesFromDB);
         }
 
-        console.log('Database empty, calling Steam API.');
+        console.log('Owned Games database empty, calling Steam API.');
         const response: AxiosResponse = await axios.get(getOwnedAppsURL);
         const gamesFromAPI: Game[] = response.data.response.games;
 

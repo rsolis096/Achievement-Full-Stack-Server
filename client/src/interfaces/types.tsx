@@ -6,19 +6,13 @@ export interface Achievement {
   displayName: string;
 }
 
-export interface UserAchievement {
+export interface TotalAchievement {
   apiname: string;
   achieved: number;
   unlocktime: number;
 
-  percent?: number;
-  otherName?: string;
-
-  icon?: string;
-  name?: string;
-  icongray?: string;
-  description?: string;
-  displayName?: string;
+  globaldata?: GlobalAchievement
+  achievementinfo? : Achievement
 }
 
 export interface GlobalAchievement {

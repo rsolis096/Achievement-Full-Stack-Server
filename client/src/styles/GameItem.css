@@ -38,7 +38,7 @@
 }
 
 .tab-image {
-    width: autopx;
+    width: auto;
     height: 42px;
     object-fit: cover;
     border-radius: 15px;
@@ -50,13 +50,9 @@
 }
 
 .tab-content{
-    color:white;
+    color: black;
 }
 
-/* Override Bootstrap default styles for active and focus states */
-.nav-link.active, .nav-link:focus, .nav-link:hover {
-    background-color: #252525!important; /* Change this to your desired color */
-}
 
 .nav-link-custom { 
     position:relative; 

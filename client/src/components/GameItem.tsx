@@ -1,5 +1,6 @@
-import Nav from "react-bootstrap/Nav";
 import { Game } from "../interfaces/types";
+
+import {ListItem, ListItemButton, ListItemText} from "@mui/material";
 
 import "../styles/GameItem.css";
 
@@ -19,17 +20,16 @@ function getImageURL(id: string) {
 function GameItem(props: GameItemProps) {
   return (
     <>
-      <Nav.Item className="nav-item-custom">
-        <Nav.Link eventKey={props.game.appid} className="nav-link-custom">
-          <div className="tab-content">
-            <img
-              className="tab-image"
-              src={getImageURL(String(props.game.appid))}
-            />
-            <p className="tab-title">{props.game.name}</p>
-          </div>
-        </Nav.Link>
-      </Nav.Item>
+        <ListItem className="nav-link-custom">
+          <ListItemButton className = "tab-content">
+              <img
+                  alt = "game image"
+                className="tab-image"
+                src={getImageURL(String(props.game.appid))}
+              />
+              <ListItemText className="tab-title">{props.game.name}</ListItemText>
+          </ListItemButton>
+        </ListItem>
     </>
   );
 }

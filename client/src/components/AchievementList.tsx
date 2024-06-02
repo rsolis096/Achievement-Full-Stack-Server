@@ -1,173 +1,146 @@
 //This component describes the Achievement Pane body
 //This component handles logic on the scale of the entire list
 
-import { useState, useEffect } from "react";
+import {useEffect, useState} from "react";
 
-import Tab from "react-bootstrap/Tab";
 import AchievementItem from "./AchievementItem";
-import {
-  Achievement,
-  UserAchievement,
-  GlobalAchievement,
-} from "../interfaces/types";
+
+import axios, {AxiosResponse} from "axios";
+
+import {Achievement, GlobalAchievement, TotalAchievement,} from "../interfaces/types";
 
 import "../styles/AchievementList.css";
 
-//This interface should be combined with the state variable and rendered that way
+
 interface AchievementListProps {
   items: Achievement[];
   appid: number;
   name: string;
+  sort : number;
+  visibleItems: boolean[];
 }
 
 function AchievementList(props: AchievementListProps) {
-  const [userAchievementData, setUserAchievementData] = useState<
-    UserAchievement[]
-  >([]);
 
-  const [globalAchievementData, setGlobalAchievementData] = useState<
-    GlobalAchievement[]
-  >([]);
+    //This state variable holds all the combined achievement data
+    const [totalData, setTotalData] = useState<
+    TotalAchievement[]
+    >([]);
 
-  //Make a post request when this item is made to get user achievement data
-  const postUserAchievementData = async () => {
-    try {
-      //Send the appid to the server (access token and steamid also needed)
-      const response = await fetch(
-        "http://localhost:3000/api/achievements/getAchievements",
-        {
-          method: "POST",
-          headers: {
-            // Tells the server that the client expects JSON in response
-            Accept: "application/json",
-            // Indicates that the request body is JSON
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            appid: props.appid,
-          }),
-        }
-      );
+    const [loading, setLoading] = useState(true);
 
-      if (!response.ok) {
-        throw new Error("Network response was not ok");
-      }
-      //Convert response into Javascript object
-      const responseData = await response.json(); // parses JSON response into native JavaScript objects
-      //Display the data returned by the server
-      setUserAchievementData(responseData);
-    } catch (error) {
-      console.error("Error fetching data:", error);
+    //Make a post request to the server to get user achievement info
+    const postUserAchievementData = async () : Promise<TotalAchievement[]>  => {
+        try{
+            const response: AxiosResponse<TotalAchievement[]> = await axios.post(
+                "http://localhost:3000/api/achievements/getAchievements",
+                {
+                    appid: props.appid,
+                    headers: {
+                        "Content-Type": "application/json",
+                    }
+                }
+            );
+            setTotalData(response.data)
+            return response.data
+        } catch(err) {
+        console.log(err)
     }
-  };
+    return [];
+    };
 
-  //Make a post request when this item is made to get the global achievement stats
-  const postGlobalAchievementData = async () => {
-    try {
-      //Send the appid to the server (access token and steamid also needed)
-      const response = await fetch(
-        "http://localhost:3000/api/achievements/getGlobalAchievements",
-        {
-          method: "POST",
-          headers: {
-            // Tells the server that the client expects JSON in response
-            Accept: "application/json",
-            // Indicates that the request body is JSON
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            appid: props.appid,
-          }),
+    //Make a post request to the server to get global achievement info
+    const postGlobalAchievementData = async () : Promise<GlobalAchievement[]>  => {
+        try {
+            const response: AxiosResponse<GlobalAchievement[]> = await axios.post(
+                "http://localhost:3000/api/achievements/getGlobalAchievements",
+                {
+                    appid: props.appid,
+                    headers: {
+                        "Content-Type": "application/json"
+                    }
+                }
+            );
+            //setGlobalAchievementData(response.data)
+            return response.data;
+        } catch(err) {
+            console.log(err)
         }
-      );
+        return [];
+    };
 
-      if (!response.ok) {
-        throw new Error("Network response was not ok");
-      }
-      //Convert response into Javascript object
-      const responseData = await response.json(); // parses JSON response into native JavaScript objects
-      //Display the data returned by the server
-      setGlobalAchievementData(responseData);
-    } catch (error) {
-      console.error("Error fetching data:", error);
+
+    useEffect(() => {
+        console.log("useEffect Called");
+        const fetchData = async () => {
+            //fetch user and global achievement data
+            const userAchievements: TotalAchievement[] = await postUserAchievementData();
+            const globalAchievements: GlobalAchievement[] = await postGlobalAchievementData();
+
+            //Set loading to false once everything has been fetched and set
+            setLoading(false);
+
+            // Combine data after both fetches are complete
+            if (userAchievements.length > 0 && globalAchievements.length > 0) {
+                const combinedData: TotalAchievement[] = userAchievements.map((userAchievement) => {
+                    const globalAchievement = globalAchievements.find(
+                        (ga) => ga.name === userAchievement.apiname
+                    );
+
+                    return {
+                        ...userAchievement,
+                        globaldata: globalAchievement,
+                        achievementinfo: props.items.find(item => item.name === userAchievement.apiname)
+                    };
+                });
+
+                setTotalData(combinedData);
+            }
+        };
+
+        fetchData();
+    }, []);
+
+    //Wait until totalData has been completed
+    if (loading) {
+        return <div>Loading...</div>;
     }
-  };
 
-  //Gets the game info upon entering the achievement list (called once)
-  const handleOnEnter = () => {
-    console.log("entered");
-    postUserAchievementData();
-    postGlobalAchievementData();
-  };
+    //Render achievement list
+    return (
+        <>
+            {totalData.length > 0 && !loading ? (
+                <div>
+                    {/*Sort the Achievement Data */}
+                    {totalData
+                        .sort((a, b) => {
 
-  //This combines the globalAchievment percents and props.items with the userAchievement list by name
-  useEffect(() => {
-    if (userAchievementData.length > 0 && globalAchievementData.length > 0) {
-      const temp: UserAchievement[] = userAchievementData.map(
-        (userAchievement, index) => {
-          const globalAchievement = globalAchievementData.find(
-            (ga) => ga.name === userAchievement.apiname
-          );
+                            if (props.sort == -1 || props.sort == 0){
+                                return (a.globaldata?.percent ?? 0) - (b.globaldata?.percent ?? 0)
+                            }
+                            if (props.sort == 1){
+                                return (b.globaldata?.percent ?? 0) - (a.globaldata?.percent ?? 0)
+                            }
+                            return 0;
+                        })
+                        //hide locked achievements
+                        .filter((item) => {
+                            //If the item is unlocked, check if it should be returned
+                            if (item.achieved == 1 ){
+                                return !props.visibleItems[1]
+                            }
+                            if (item.achieved == 0 ){
+                                return !props.visibleItems[0]
+                            }
 
-          return {
-            ...userAchievement,
-            //Combine globalAchievement.percent
-            percent: globalAchievement?.percent, // Optional chaining to handle cases where there's no match
-            //Bring over glovalAchievement.name just to verify one to one transfer
-            otherName: globalAchievement?.name,
-            //Combine props.items
-            icon: props.items[index]?.icon,
-            name: props.items[index]?.name,
-            icongray: props.items[index]?.icongray,
-            description: props.items[index]?.description,
-            displayName: props.items[index]?.displayName,
-          };
-        }
-      );
-
-      setUserAchievementData(temp);
-    }
-  }, [globalAchievementData, props.items]); // Run whenever globalAchievementData changes
-
-  //This concept shows what a sorted in descending order, delete .sort to go back to default
-  const AchievementItems = userAchievementData
-    .sort((a, b) => {
-      const percentA = a.percent ?? 0; // Default to 0 if undefined
-      const percentB = b.percent ?? 0; // Default to 0 if undefined
-      return percentB - percentA;
-    })
-    .map((a) => (
-      <AchievementItem
-        key={a.name}
-        stats={a}
-        appid={props.appid}
-      ></AchievementItem>
-    ));
-
-  return (
-    <>
-      <Tab.Pane onEnter={handleOnEnter} eventKey={props.appid}>
-        {AchievementItems}
-      </Tab.Pane>
-    </>
-  );
+                        })
+                        .map((a) => <AchievementItem key={a.apiname} data={a} />)
+                    }
+                </div>
+            ) : <div>No user achievements found.</div>}
+        </>
+    );
 }
 
 export default AchievementList;
 
-/*
-  //runs on every time globalAchievementData changes, which should only be once
-  //both globalAchievementData and userAchievementData share the same percent info
-  useEffect(() => {
-    if (userAchievementData.length > 0 && globalAchievementData.length > 0) {
-      const tempArr: UserAchievement[] = userAchievementData.map(
-        (u, index) => ({
-          ...u,
-          percent: globalAchievementData[index]?.percent,
-        })
-      );
-      setUserAchievementData(tempArr);
-    }
-  }, [globalAchievementData]); // Run whenever globalAchievementData changes
-
-  */

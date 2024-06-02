@@ -1,6 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import List from "./components/List.tsx";
+import App from "./components/App.tsx";
 
 // Import our custom CSS
 import "../src/styles/scss/styles.scss";
@@ -12,6 +12,6 @@ import "./styles/index.css";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <List />
+    <App />
   </React.StrictMode>
 );

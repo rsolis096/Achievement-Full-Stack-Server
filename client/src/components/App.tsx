@@ -14,11 +14,12 @@ import {
   Menu,
   MenuItem,
   FormControlLabel,
-  Checkbox,
+  Checkbox, IconButton,
 
 } from "@mui/material";
 
 import SortIcon from '@mui/icons-material/Sort';
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 
 import AchievementList from "./AchievementList.tsx";
 
@@ -101,25 +102,30 @@ function App() {
         </Tabs>
       </AppBar>
 
-      {/* Side Navigation and Content */}
-      <Grid container spacing={2} style={{ marginTop: '20px' }}>
+      {/* Main Body Content */}
+      <Grid container spacing={0.5} style={{ marginTop: '20px' }}>
 
         {/*Games Bar*/}
-        <Grid item xs={12} sm={4} md={3}>
-          <Paper style={{ padding: '16px' }}>
-            <Typography variant="h6">Games</Typography>
+        <Grid item xs={12} sm={4} md={3} >
+          <Paper elevation = {3} className="game-list-container">
+            <Typography style = {{color : "white"}} variant="h5">Games</Typography>
             <List>{gameItems}</List>
-            <Button variant="contained" color="primary">Expand Games</Button>
+            <IconButton
+                style = {{color: "white"}}
+                size = "large"
+            >
+              <AddCircleOutlineIcon />
+            </IconButton>
           </Paper>
         </Grid>
 
         {/*Achievements Bar*/}
-        <Grid item xs={12} sm={8} md={9}>
-          <Paper style={{ padding: '16px' }}>
+        <Grid item xs={12} sm={8} md={9} className="achievement-list-container" >
 
             {/*Achievement List Filter Bar*/}
-            <AppBar position="static">
-              <Box display="flex" alignItems="center" mb={1}>
+            <AppBar className = "achievement-filters" position="static">
+
+              <Box display="flex" alignItems="center">
 
                 {/*Filter Button*/}
                 <Button
@@ -143,37 +149,38 @@ function App() {
                 </Menu>
 
                 {/*Hide Locked Checkbox*/}
-                <FormControlLabel
-                    control={
-                      <Checkbox
-                          name="Show Locked"
-                          color="secondary"
-                          onChange = {() => handleCheckBox(0)}
-                      />
-                    }
-                    label="Hide Locked"
-                    style={{ marginLeft: '10px' }} // Adjust spacing as needed
-                />
+                  <FormControlLabel
+                      control={
+                        <Checkbox
+                            name="Show Locked"
+                            onChange = {() => handleCheckBox(0)}
+                            style = {{color: "white"}}
+                            sx={{ '& .MuiSvgIcon-root': { fontSize: 28 } }}
+                        />
+                      }
+                      label="Hide Locked"
+                      style={{ marginLeft: '10px' }} // Adjust spacing as needed
+                  />
 
-                <FormControlLabel
-                    control={
-                      <Checkbox
-                          name="Show Locked"
-                          color="secondary"
-                          onChange = {() => handleCheckBox(1)}
-                      />
-                    }
-                    label="Hide Unlocked"
-                    style={{ marginLeft: '10px' }} // Adjust spacing as needed
-                />
-
-
+                  <FormControlLabel
+                      control={
+                        <Checkbox
+                            name="Show Locked"
+                            onChange = {() => handleCheckBox(1)}
+                            style = {{color: "white"}}
+                            sx={{ '& .MuiSvgIcon-root': { fontSize: 28 } }}
+                        />
+                      }
+                      label="Hide Unlocked"
+                      style={{ marginLeft: '10px' }} // Adjust spacing as needed
+                  />
 
               </Box>
             </AppBar>
 
             {/*Achievement List Display Box*/}
-            <Box className="achievement-list-box">
+            <Box >
+              {/*Achievement List Items*/}
               {selectedGame ? (
                   <AchievementList
                       key={selectedGame.appid}
@@ -188,8 +195,8 @@ function App() {
               )}
             </Box>
 
-          </Paper>
         </Grid>
+
       </Grid>
 
     </>

@@ -20,11 +20,11 @@ function getImageURL(id: string) {
 function GameItem(props: GameItemProps) {
   return (
     <>
-        <ListItem className="nav-link-custom">
-          <ListItemButton className = "tab-content">
+        <ListItem className="game-card">
+          <ListItemButton className = "game-card-button">
               <img
                   alt = "game image"
-                className="tab-image"
+                className="game-card-image"
                 src={getImageURL(String(props.game.appid))}
               />
               <ListItemText className="tab-title">{props.game.name}</ListItemText>

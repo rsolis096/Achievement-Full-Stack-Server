@@ -1,48 +1,18 @@
-/* Individual achievement card */
-.ach-card {
+.achievement-card {
     display: flex;
     transition: background-color 0.3s ease, transform 0.3s ease;
+    background-color: #2F3335!important;
+    color: white!important;
+    padding: 10px!important;
 }
 
-.ach-card:hover{
-    background-color: #b5b6b7;
+.achievement-card:hover{
+    background-color: #a7acb1!important;
     transform: scale(1.02);
 }
 
 /* Achievement icon */
 .ach-image {
-    flex: 1;
     width: 50%;
     height: auto;
-}
-
-
-/* Achievement text container */
-.ach-body {
-    flex: 2;
-}
-
-/* Achievement title */
-h3 {
-    font-size: 18px!important; /* Smaller font size */
-    font-weight: bold;
-    text-decoration: underline;
-}
-
-/* Achievement description */
-p {
-    font-size: 16px; /* Smaller font size */
-}
-
-.unlock-info{
-    flex: 3;
-}
-
-.global-info{
-    flex: 4;
-}
-
-.list-group-item{
-    background-color: rgba(0, 0, 0, 0)!important;
-    color: white!important;
 }

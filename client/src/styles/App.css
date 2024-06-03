@@ -1,24 +1,19 @@
-.nav-games {
-    padding: 10px;
-    margin: 0;
-    background-color: rgba(0, 0, 0, 0)!important;
-}
 
-.nav-achievements{
-    padding: 15px; /* Optional: Add padding inside the border */
-    background-color: rgba(0, 0, 0, 0)!important;
+.achievement-list-container{
+    padding-right: 10px!important;
 
 }
 
-.games-column{
-    color: white;
+.game-list-container{
+    padding-right: 10px!important;
+    background-color: rgba(0,0,0,0)!important;
+    text-align: center!important;
 }
 
-.achievements-column{
-    color:white;
-}
-
-.test-list-group{
-    background-color: rgba(0, 0, 0, 0)!important;
+.achievement-filters{
+    padding: 5px!important;
+    margin-bottom: 10px!important;
+    border-radius: 5px!important;
+    background-color: #2F3335!important;
 }
 

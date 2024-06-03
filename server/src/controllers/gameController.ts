@@ -4,7 +4,7 @@ import axios, { AxiosResponse } from 'axios';
 import db from '../db/dbConfig.js';
 import { handleError } from '../utils/errorHandler.js';
 
-const webAPIKey = process.env.WEB_API_KEY as string;
+//const webAPIKey = process.env.WEB_API_KEY as string;
 const accessToken = process.env.ACCESS_TOKEN as string;
 const steamID = process.env.STEAM_ID as string;
 
@@ -29,6 +29,7 @@ interface Achievement {
 
 export const getOwnedGames = async (req: Request, res: Response) => {
     try {
+        //Attempt to get User Game Library from database
         const result = await db.query('SELECT * FROM games LIMIT 10');
         let gamesFromDB: Game[] = result.rows;
 
@@ -37,10 +38,12 @@ export const getOwnedGames = async (req: Request, res: Response) => {
             return res.status(200).send(gamesFromDB);
         }
 
+        //If nothing returned, then retrieve User Game Library from Steam API
         console.log('Owned Games database empty, calling Steam API.');
         const response: AxiosResponse = await axios.get(getOwnedAppsURL);
         const gamesFromAPI: Game[] = response.data.response.games;
 
+        //Write data from Steam API onto database
         if (gamesFromAPI.length > 0) {
             await saveGamesToDB(gamesFromAPI);
         }

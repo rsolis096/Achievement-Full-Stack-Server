@@ -29,8 +29,9 @@ interface Achievement {
 
 export const getOwnedGames = async (req: Request, res: Response) => {
     try {
+        console.log("endpoint hit")
         //Attempt to get User Game Library from database
-        const result = await db.query('SELECT * FROM games LIMIT 10');
+        const result = await db.query('SELECT * FROM games LIMIT $1', [req.body.count]);
         let gamesFromDB: Game[] = result.rows;
 
         if (gamesFromDB.length > 0) {

@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 
+import axios, {AxiosResponse} from "axios";
+
 import {
   AppBar,
   Tabs,
@@ -24,66 +26,79 @@ import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import AchievementList from "./AchievementList.tsx";
 
 import "../styles/App.css";
-import {Game} from "../interfaces/types.tsx";
+import {Game, TotalAchievement} from "../interfaces/types.tsx";
 import GameItem from "./GameItem.tsx";
 
 function App() {
 
-  //Used to anchor the filter dropdown to the button
+  //Define state variables
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [sortFilter, setSortFilter] = useState<number>(0)
+  const [currentSort, setCurrentSort] = useState<string>("Most to Least Rare")
+  const [visibleFilter, setVisibleFilter] = useState<boolean[]>([false, false]);
+  const [userLibraryState, setUserLibraryState] = useState<Game[]>([]);
+  const [selectedGame, setSelectedGame] = useState<Game>();
+  const [gamesCount, setGamesCount] = useState<number>(10)
+
+  //Fetch the game data from the server (API or Database determined by server)
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response: AxiosResponse<Game[]> = await axios.post(
+            "http://localhost:3000/api/games/getGames",
+            {
+              count: gamesCount,
+              headers: {
+                "Content-Type": "application/json",
+              }
+            }
+        );
+        setUserLibraryState(response.data);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
+    fetchData();
+  }, [gamesCount]);
 
   //Used to determine if filter menu is open
   const open = Boolean(anchorEl);
 
-  const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+  /*Button Handlers*/
+
+  const handleExpandButton = () => {
+    console.log(gamesCount)
+    setGamesCount( (prevState) => {
+      return prevState + 5
+    })
+    console.log(userLibraryState.length)
+  }
+
+  const handleCheckBox = (index : number) => {
+    setVisibleFilter(prevState => prevState.map((item, idx) => idx === index ? !item : item))
+  }
+
+  const handleFilterClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget);
   };
 
-
-  const [sortFilter, setSortFilter] = useState<number>(0)
-  const [currentSort, setCurrentSort] = useState<string>("Most to Least Rare")
-
-  //Close when an Item is selected and do stuff
   const handleClose = (n : number) => {
+    //Close filter when a filter choice is selected and do stuff
     const labels = ["Most to Least Rare", "Least To Most Rare"];
-    setAnchorEl(null);
+    setAnchorEl(null)
     if(n != -1){
       setSortFilter(n)
       setCurrentSort(labels[n])
     }
   };
 
-
-  const [visibleFilter, setVisibleFilter] = useState<boolean[]>([false, false]);
-  //Handle Checkbox stuff
-  const handleCheckBox = (index : number) => {
-    setVisibleFilter(prevState => prevState.map((item, idx) => idx === index ? !item : item))
-  }
-
-  const [userLibraryState, setUserLibraryState] = useState<Game[]>([]);
-  const [selectedGame, setSelectedGame] = useState<Game>();
-
-
-
+  //What happens when an item on the game list is clicked
   const handleGameClick = (game  : Game) => {
+    //Load up the achievements for the game
     setSelectedGame(game);
   };
 
-  //Fetch the game data from the server (API or Database determined by server)
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetch(
-          "http://localhost:3000/api/games/getGames"
-        );
-        const data = await response.json();
-        setUserLibraryState(data);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
-    };
-    fetchData();
-  }, []);
+  /* Helper Functions */
 
   //Display the selectable games for the left column
   const gameItems = userLibraryState.map((item) => (
@@ -111,8 +126,10 @@ function App() {
             <Typography style = {{color : "white"}} variant="h5">Games</Typography>
             <List>{gameItems}</List>
             <IconButton
+                className = "expand-game-list-button"
                 style = {{color: "white"}}
                 size = "large"
+                onClick = {handleExpandButton}
             >
               <AddCircleOutlineIcon />
             </IconButton>
@@ -124,13 +141,12 @@ function App() {
 
             {/*Achievement List Filter Bar*/}
             <AppBar className = "achievement-filters" position="static">
-
               <Box display="flex" alignItems="center">
 
                 {/*Filter Button*/}
                 <Button
                     id="basic-button"
-                    onClick={handleClick}
+                    onClick={handleFilterClick}
                     variant="contained"
                     startIcon = {<SortIcon />}
                 >

@@ -4,6 +4,6 @@ import { getOwnedGames } from '../controllers/gameController.js';
 
 const router = Router();
 
-router.get('/getGames', getOwnedGames);
+router.post('/getGames', getOwnedGames);
 
 export default router;

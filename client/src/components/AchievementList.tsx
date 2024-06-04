@@ -71,7 +71,6 @@ function AchievementList(props: AchievementListProps) {
 
 
     useEffect(() => {
-        console.log("useEffect Called");
         const fetchData = async () => {
             //fetch user and global achievement data
             const userAchievements: TotalAchievement[] = await postUserAchievementData();

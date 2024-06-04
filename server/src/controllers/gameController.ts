@@ -29,7 +29,6 @@ interface Achievement {
 
 export const getOwnedGames = async (req: Request, res: Response) => {
     try {
-        console.log("endpoint hit")
         //Attempt to get User Game Library from database
         const result = await db.query('SELECT * FROM games LIMIT $1', [req.body.count]);
         let gamesFromDB: Game[] = result.rows;
@@ -49,6 +48,37 @@ export const getOwnedGames = async (req: Request, res: Response) => {
             await saveGamesToDB(gamesFromAPI);
         }
         return res.status(200).send(gamesFromAPI);
+    } catch (error) {
+        handleError(res, error as Error, 'An error occurred while processing the request.');
+    }
+};
+
+export const getGamesSearch = async (req: Request, res: Response) => {
+    try {
+        console.log("User Searched: ", req.body.lookup)
+        /*
+        //Attempt to get User Game Library from database
+        const result = await db.query('SELECT * FROM games LIMIT $1', [req.body.count]);
+        let gamesFromDB: Game[] = result.rows;
+
+        if (gamesFromDB.length > 0) {
+            console.log('Owned Game data retrieved from database');
+            return res.status(200).send(gamesFromDB);
+        }
+
+        //If nothing returned, then retrieve User Game Library from Steam API
+        console.log('Owned Games database empty, calling Steam API.');
+        const response: AxiosResponse = await axios.get(getOwnedAppsURL);
+        const gamesFromAPI: Game[] = response.data.response.games;
+
+        //Write data from Steam API onto database
+        if (gamesFromAPI.length > 0) {
+            await saveGamesToDB(gamesFromAPI);
+        }
+        return res.status(200).send(gamesFromAPI);
+        */
+        //YOU MUST SEND A RESPONSE
+         return res.status(200).send("hi")
     } catch (error) {
         handleError(res, error as Error, 'An error occurred while processing the request.');
     }

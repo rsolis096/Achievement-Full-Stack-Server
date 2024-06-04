@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, {ChangeEvent, useEffect, useState} from "react";
 
 import axios, {AxiosResponse} from "axios";
 
@@ -16,7 +16,7 @@ import {
   Menu,
   MenuItem,
   FormControlLabel,
-  Checkbox, IconButton,
+  Checkbox, IconButton, FormControl, Input, InputAdornment,
 
 } from "@mui/material";
 
@@ -26,8 +26,9 @@ import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import AchievementList from "./AchievementList.tsx";
 
 import "../styles/App.css";
-import {Game, TotalAchievement} from "../interfaces/types.tsx";
+import {Game} from "../interfaces/types.tsx";
 import GameItem from "./GameItem.tsx";
+import SearchIcon from "@mui/icons-material/Search";
 
 function App() {
 
@@ -38,7 +39,9 @@ function App() {
   const [visibleFilter, setVisibleFilter] = useState<boolean[]>([false, false]);
   const [userLibraryState, setUserLibraryState] = useState<Game[]>([]);
   const [selectedGame, setSelectedGame] = useState<Game>();
-  const [gamesCount, setGamesCount] = useState<number>(10)
+  const [gameCount, setGamesCount] = useState<number>(10)
+  const [gameSearch, setGameSearch] = useState<string>("")
+  const [gameSearchList, setGameSearchList] = useState<Game[]>([])
 
   //Fetch the game data from the server (API or Database determined by server)
   useEffect(() => {
@@ -47,7 +50,7 @@ function App() {
         const response: AxiosResponse<Game[]> = await axios.post(
             "http://localhost:3000/api/games/getGames",
             {
-              count: gamesCount,
+              count: gameCount,
               headers: {
                 "Content-Type": "application/json",
               }
@@ -59,29 +62,56 @@ function App() {
       }
     };
     fetchData();
-  }, [gamesCount]);
+  }, [gameCount]);
+
+
+  //Post request for game lookup
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response: AxiosResponse<Game[]> = await axios.post(
+            "http://localhost:3000/api/games/getGames/search",
+            {
+              lookup: gameSearch,
+              headers: {
+                "Content-Type": "application/json",
+              }
+            }
+        );
+        //YOU MUST DO SOMETHING WITH THE RESPONSE
+        setGameSearchList(response.data);
+        console.log(gameSearchList)
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
+    fetchData();
+  }, [gameSearch]);
+
 
   //Used to determine if filter menu is open
   const open = Boolean(anchorEl);
 
   /*Button Handlers*/
 
+  //Handles when the user clock
   const handleExpandButton = () => {
-    console.log(gamesCount)
     setGamesCount( (prevState) => {
       return prevState + 5
     })
-    console.log(userLibraryState.length)
   }
 
+  //Handles when the user clicks on a filter checkbox
   const handleCheckBox = (index : number) => {
     setVisibleFilter(prevState => prevState.map((item, idx) => idx === index ? !item : item))
   }
 
+  //Handles when the user clicks on the filter drop down menu
   const handleFilterClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget);
   };
 
+  //Handles when the filter dropdown menu is closed
   const handleClose = (n : number) => {
     //Close filter when a filter choice is selected and do stuff
     const labels = ["Most to Least Rare", "Least To Most Rare"];
@@ -97,6 +127,14 @@ function App() {
     //Load up the achievements for the game
     setSelectedGame(game);
   };
+
+  //Handle changes to the search Input box
+  const handleSearchBoxChange = (e: ChangeEvent<HTMLInputElement>) =>{
+    //Making individual calls to the server per change doesn't work well. Need to find out what's going on or take a different approach
+    console.log("search box changes : ", e.target.value)
+    setGameSearch(e.target.value);
+  };
+
 
   /* Helper Functions */
 
@@ -124,6 +162,23 @@ function App() {
         <Grid item xs={12} sm={4} md={3} >
           <Paper elevation = {3} className="game-list-container">
             <Typography style = {{color : "white"}} variant="h5">Games</Typography>
+
+            {/*Game Search */}
+            <FormControl variant="standard">
+
+              <Input
+                  id="input-with-icon-adornment"
+                  sx={{ color: 'white' }}
+                  onChange = {handleSearchBoxChange}
+                  startAdornment={
+                    <InputAdornment position="start">
+                      <SearchIcon sx={{ color: 'white' }}/>
+                    </InputAdornment>
+                  }
+              />
+            </FormControl>
+
+            {/*Game List*/}
             <List>{gameItems}</List>
             <IconButton
                 className = "expand-game-list-button"

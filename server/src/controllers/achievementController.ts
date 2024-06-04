@@ -41,12 +41,21 @@ export const getUserAchievements = async (req: Request, res: Response) => {
         //Update the database with the retrieved info
         if (achievementsFromAPI.length > 0) {
             const queryText = 'UPDATE games SET user_achievements = $1 WHERE appid = $2';
-            await db.query(queryText, [JSON.stringify(achievementsFromAPI), req.body.appid]);
+            try {
+                const res = await db.query(queryText, [JSON.stringify(achievementsFromAPI), req.body.appid]);
+                if (res.rowCount) {
+                    console.log(`Successfully updated user_achievements for appid: ${req.body.appid}`);
+                } else {
+                    console.log(`No rows were updated for user_achievements with appid: ${req.body.appid}`);
+                }
+            }catch(error){
+                console.error('Error executing query to write to database:', error);
+            }
         }
         console.log('User Achievement data retrieved from Steam API for appid', req.body.appid);
         return res.send(achievementsFromAPI);
     } catch (error) {
-        handleError(res, error as Error, 'An error occurred while processing the request.');
+        handleError(res, error as Error, 'An error occurred while processing User Achievement request.');
     }
 };
 
@@ -70,11 +79,20 @@ export const getGlobalAchievements = async (req: Request, res: Response) => {
         //Update the database with the retrieved info
         if (globalAchievementsFromAPI.length > 0) {
             const queryText = 'UPDATE games SET global_achievements = $1 WHERE appid = $2';
-            await db.query(queryText, [JSON.stringify(globalAchievementsFromAPI), req.body.appid]);
+            try {
+                const res = await db.query(queryText, [JSON.stringify(globalAchievementsFromAPI), req.body.appid]);
+                if (res.rowCount) {
+                    console.log(`Successfully updated global_achievements for appid: ${req.body.appid}`);
+                } else {
+                    console.log(`No rows were updated for global_achievements with appid: ${req.body.appid}`);
+                }
+            }catch(error){
+                console.error('Error executing query to write to database:', error);
+            }
         }
         console.log('Global Achievement data retrieved from Steam API for appid', req.body.appid);
         return res.send(globalAchievementsFromAPI);
     } catch (error) {
-        handleError(res, error as Error, 'An error occurred while processing the request.');
+        handleError(res, error as Error, 'An error occurred while processing Global Achievement request.');
     }
 };

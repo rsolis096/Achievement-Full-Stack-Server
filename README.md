@@ -2,21 +2,18 @@ NodeJS - ghttps://nodejs.org/en/download/prebuilt-installer
 
 ## Required NPM Packages:
 
-- axios: "^1.6.8",
-- cors: "^2.8.5",
-- dotenv: "^16.4.5",
-- ejs: "^3.1.10",
-- express": "^4.19.2",
-- nodemon": "^3.1.2",
-- pg": "^8.11.5"
-
-- @types/cors: "^2.8.17",
-- @types/express: "^4.17.21",
-- @types/node: "^20.12.11",
-- @types/pg: "^8.11.6",
-- typescript: "^5.4.5"
-
-
+- axios:        npm install axios
+- cors:         npm i cors
+- dotenv:       npm i dotenv
+- ejs:          npm i ejs
+- express:      npm i express
+- nodemon:      npm i nodemon
+- pg:           npm i pg
+- typescript:   npm i typescript
+- @types/cors:      npm i @types/cors
+- @types/express:   npm i @types/express
+- @types/node:      npm i @types/node
+- @types/pg:        npm i @types/pg
 
 ## Create a .env file in the root of the project with the following variables:
 

@@ -1,5 +1,3 @@
-# The following dependencies are required to run the server
-
 NodeJS - ghttps://nodejs.org/en/download/prebuilt-installer
 
 ## Required NPM Packages:
@@ -20,7 +18,7 @@ NodeJS - ghttps://nodejs.org/en/download/prebuilt-installer
 
 
 
-# Create a .env file in the root of the project with the following variables:
+## Create a .env file in the root of the project with the following variables:
 
 - WEB_API_KEY 
 - ACCESS_TOKEN  (Expires every 24 hours, choose store option)

@@ -18,26 +18,30 @@ export const createUser = async (steamId : string, displayName: string, photos :
 };
 
 
-export const getAuth = (req: Request, res: Response) => {
-    console.log("getAuth")
-    res.redirect('/');
+export const getUserData = (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+        return res.json({ authenticated: false });
+    }
+    //console.log("Sending user data: ", req.user)
+    return res.json(req.user)
 }
 
 export const getAuthReturn = (req: Request, res: Response) => {
-    console.log("getAuthReturn")
     if(req.isAuthenticated()) {
         console.log("user is authenticated")
     }else{
         console.log("user is not authenticated")
     }
-    res.redirect("http://localhost:5173/")
+    return res.redirect( "http://localhost:5173");
 }
 
 export const checkAuth = (req: Request, res: Response) => {
-    if(!req.isAuthenticated()) {
-        return res.redirect('http://localhost:3000/auth/steam/login')
+    if (req.isAuthenticated()) {
+        console.log("you are authenticated")
+        res.json({ authenticated: true });
+    } else {
+        res.json({ authenticated: false });
     }
-    return res.json({ authenticated: req.isAuthenticated() });
 }
 
 //get for testing, should be post since client requests it (authenticationRouter)
@@ -48,11 +52,10 @@ export const postAuthLogout = (req: Request, res: Response) => {
             return res.status(500).send("Error logging out");
         }
         // Check if the user is logged out
-        if (!req.isAuthenticated()) {
-            return res.send("logged out");
-        } else {
-            return res.send("still logged in");
+        if (req.isAuthenticated()) {
+            return res.send("(server) ERROR: still logged in");
         }
+        return res.redirect( "http://localhost:5173");
     });
 }
 

@@ -59,8 +59,8 @@ passport.use(new SteamStrategy({
         //^ tested using req.isAuthenticated();
         //^ data accessed using req.user
         try{
-
-            var exists = false;
+            console.log("Login requested")
+            let exists = false;
             //Verify User Exists in database using steamID
             await findUserBySteamId(profile.id).then((e : boolean) => {
                 exists = e;
@@ -80,8 +80,6 @@ passport.use(new SteamStrategy({
         return done(null, profile);
     }
 ));
-
-
 
 
 //Define handlers for usable endpoints

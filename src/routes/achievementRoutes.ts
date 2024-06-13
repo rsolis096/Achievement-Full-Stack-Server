@@ -6,4 +6,5 @@ const router = Router();
 
 router.post('/getAchievements', getUserAchievements);
 router.post('/getGlobalAchievements', getGlobalAchievements)
+
 export default router;

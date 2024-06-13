@@ -29,6 +29,9 @@ interface Achievement {
 
 export const getOwnedGames = async (req: Request, res: Response) => {
     try {
+        //console.log('Cookies:', req.cookies); // Assuming you have cookie-parser middleware
+        //console.log('Session:', req.session);
+
         //Attempt to get User Game Library from database
         const result = await db.query('SELECT * FROM games LIMIT $1', [req.body.count]);
         let gamesFromDB: Game[] = result.rows;

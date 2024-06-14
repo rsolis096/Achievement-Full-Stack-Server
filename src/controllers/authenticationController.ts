@@ -18,19 +18,14 @@ export const createUser = async (steamId : string, displayName: string, photos :
 };
 
 
-export const getAuthReturn = (req: Request, res: Response) => {
-    if(req.isAuthenticated()) {
-        console.log("user is authenticated")
-        const redirectUrl = new URL('https://achievement-full-stack-client.onrender.com');
-        redirectUrl.searchParams.append('user', JSON.stringify(req.user)); // Add user data to URL
-        return res.redirect(redirectUrl.toString());
-    }else{
-        console.log("user is not authenticated")
-    }
-    return res.redirect( "https://achievement-full-stack-client.onrender.com"); //client
+export const authReturn = (req: Request, res: Response) => {
+    console.log("User authenticated:", req.isAuthenticated());
+    console.log("Session:", req.session);
+    res.redirect(`https://achievement-full-stack-client.onrender.com`);
 }
 
 export const checkAuth = (req: Request, res: Response) => {
+    console.log("Check Authenticated - Session:", req.session);
     if (req.isAuthenticated()) {
         console.log("you are authenticated")
         res.json({ authenticated: true, user:req.user });

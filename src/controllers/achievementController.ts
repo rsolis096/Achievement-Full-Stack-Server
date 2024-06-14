@@ -58,6 +58,7 @@ export const getUserAchievements = async (req: Request, res: Response) => {
         console.log("Error in getUserAchievements")
         const err = error as AxiosError
         console.log(err.response?.data)
+        res.json({error: err.response?.data})
     }
 };
 

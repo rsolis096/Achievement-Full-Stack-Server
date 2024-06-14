@@ -46,11 +46,11 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 passport.serializeUser(function(user, done) {
-    done(null, user);
+    return done(null, user);
 });
 
 passport.deserializeUser(function(obj : any, done) {
-    done(null, obj);
+    return done(null, obj);
 });
 
 passport.use(new SteamStrategy({

@@ -19,9 +19,24 @@ export const createUser = async (steamId : string, displayName: string, photos :
 
 
 export const authReturn = (req: Request, res: Response) => {
-    console.log("User authenticated:", req.isAuthenticated());
-    console.log("Session:", req.session);
-    res.redirect(`https://completiontracker.com`);
+    if (req.user) {
+        req.login(req.user, (err) => {
+            if (err) {
+                return res.status(500).send(err);
+            }
+            if (req.isAuthenticated()) {
+                console.log("User is authenticated");
+                return res.redirect(`https://completiontracker.com`); // Client URL
+            } else {
+                console.log("User is not authenticated");
+                return res.redirect(`https://completiontracker.com`); // Redirect to login page
+            }
+        });
+    }else {
+        console.log("User is not authenticated");
+        return res.redirect(`https://completiontracker.com`); // Redirect to login page
+    }
+
 }
 
 export const checkAuth = (req: Request, res: Response) => {

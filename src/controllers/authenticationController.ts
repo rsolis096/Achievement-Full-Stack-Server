@@ -21,7 +21,7 @@ export const createUser = async (steamId : string, displayName: string, photos :
 export const authReturn = (req: Request, res: Response) => {
     console.log("User authenticated:", req.isAuthenticated());
     console.log("Session:", req.session);
-    res.redirect(`https://achievement-full-stack-client.onrender.com`);
+    res.redirect(`https://completiontracker.com`);
 }
 
 export const checkAuth = (req: Request, res: Response) => {
@@ -46,7 +46,7 @@ export const postAuthLogout = (req: Request, res: Response) => {
         if (req.isAuthenticated()) {
             return res.send("(server) ERROR: still logged in");
         }
-        return res.redirect( "https://achievement-full-stack-client.onrender.com");//client
+        return res.redirect( "https://completiontracker.com");//client
     });
 }
 

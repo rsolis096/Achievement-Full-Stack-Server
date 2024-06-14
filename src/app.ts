@@ -25,7 +25,7 @@ app.use(express.json());
 
 //Used to allow client to make requests to the server
 app.use(cors({
-    origin: 'https://achievement-full-stack-client.onrender.com',
+    origin: 'https://completiontracker.com',
     credentials: true,
 }));
 
@@ -54,8 +54,8 @@ passport.deserializeUser(function(obj : any, done) {
 });
 
 passport.use(new SteamStrategy({
-        returnURL: 'https://achievement-full-stack-server.onrender.com/auth/steam/return', //server
-        realm: 'https://achievement-full-stack-server.onrender.com/', //server
+        returnURL: 'https://api.completiontracker.com/auth/steam/return', //server
+        realm: 'https://api.completiontracker.com/', //server
         apiKey: webAPIKey
     },
     async function(identifier, profile, done) {

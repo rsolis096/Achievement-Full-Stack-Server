@@ -7,6 +7,7 @@ import achievementRoutes from './routes/achievementRoutes.js';
 import authenticationRoutes from "./routes/authenticationRoutes.js";
 import passport from "passport";
 import session from 'express-session';
+import cookieSession from 'cookie-session'
 import SteamStrategy from "passport-steam";
 
 
@@ -29,14 +30,10 @@ app.use(cors({
     credentials: true,
 }));
 
-app.use(session({
+app.use(cookieSession({
+    name: 'session',
     secret: 'keyboard cat',
-    resave: true,
-    saveUninitialized: true,
-    cookie: {
-        secure: false, // Ensures the browser only sends the cookie over HTTPS
-        sameSite: 'none', // Allows the cookie to be sent with cross-site requests
-    }
+    maxAge: 30 * 24 * 60 * 60 // 30 days
 }));
 
 app.set('trust proxy', 1) // trust first proxy

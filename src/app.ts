@@ -9,6 +9,7 @@ import passport from "passport";
 import session from 'express-session';
 import SteamStrategy from "passport-steam";
 
+
 import {findUserBySteamId, createUser} from "./controllers/authenticationController.js";
 
 const webAPIKey = process.env.WEB_API_KEY as string;
@@ -30,13 +31,15 @@ app.use(cors({
 
 app.use(session({
     secret: 'keyboard cat',
-    resave: false,
+    resave: true,
     saveUninitialized: true,
     cookie: {
-        secure: true, // Ensures the browser only sends the cookie over HTTPS
+        secure: false, // Ensures the browser only sends the cookie over HTTPS
         sameSite: 'none', // Allows the cookie to be sent with cross-site requests
     }
 }));
+
+app.set('trust proxy', 1) // trust first proxy
 
 // Initialize Passport and restore authentication state from the session
 app.use(passport.initialize());

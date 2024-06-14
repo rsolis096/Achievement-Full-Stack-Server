@@ -49,7 +49,7 @@ passport.deserializeUser(function(obj : any, done) {
 
 passport.use(new SteamStrategy({
         returnURL: 'https://achievement-full-stack-server.onrender.com/auth/steam/return', //server
-        realm: 'https://achievement-full-stack-client.onrender.com', //client
+        realm: 'https://achievement-full-stack-server.onrender.com', //client
         apiKey: webAPIKey
     },
     async function(identifier, profile, done) {

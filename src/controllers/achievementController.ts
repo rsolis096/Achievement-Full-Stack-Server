@@ -1,6 +1,6 @@
 // src/controllers/achievementController.ts
 import { Request, Response } from 'express';
-import axios, { AxiosResponse } from 'axios';
+import axios, {AxiosError, AxiosResponse} from 'axios';
 import db from '../db/dbConfig.js';
 import { handleError } from '../utils/errorHandler.js';
 
@@ -54,8 +54,10 @@ export const getUserAchievements = async (req: Request, res: Response) => {
         }
         console.log('User Achievement data retrieved from Steam API for appid', req.body.appid);
         return res.send(achievementsFromAPI);
-    } catch (error) {
-        handleError(res, error as Error, 'An error occurred while processing User Achievement request.');
+    } catch(error){
+        console.log("Error in getUserAchievements")
+        const err = error as AxiosError
+        console.log(err.response?.data)
     }
 };
 
@@ -65,6 +67,7 @@ export const getGlobalAchievements = async (req: Request, res: Response) => {
         //Attempt to get global achievement data from the database first
         const result = await db.query(`SELECT global_achievements FROM games WHERE appid=${req.body.appid}`);
         const globalAchievementsFromDB: GlobalAchievement[] = result.rows[0]?.global_achievements || [];
+
 
         if (globalAchievementsFromDB.length > 0) {
             console.log('Global Achievement data retrieved from database for appid', req.body.appid);
@@ -92,7 +95,9 @@ export const getGlobalAchievements = async (req: Request, res: Response) => {
         }
         console.log('Global Achievement data retrieved from Steam API for appid', req.body.appid);
         return res.send(globalAchievementsFromAPI);
-    } catch (error) {
-        handleError(res, error as Error, 'An error occurred while processing Global Achievement request.');
+    } catch(error){
+        console.log("Error in getGlobalAchievements: ")
+        const err = error as AxiosError
+        console.log(err.response?.data)
     }
 };

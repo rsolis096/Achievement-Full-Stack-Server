@@ -31,7 +31,7 @@ app.use(session({
 
 //Used to allow client to make requests to the server
 app.use(cors({
-    origin: 'https://achievement-full-stack-server.onrender.com',
+    origin: 'https://achievement-full-stack-client.onrender.com',
     credentials: true,
 }));
 

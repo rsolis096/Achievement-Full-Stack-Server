@@ -32,7 +32,7 @@ export const getAuthReturn = (req: Request, res: Response) => {
     }else{
         console.log("user is not authenticated")
     }
-    return res.redirect( "http://localhost:5173");
+    return res.redirect( "https://achievement-full-stack-client.onrender.com"); //client
 }
 
 export const checkAuth = (req: Request, res: Response) => {
@@ -55,7 +55,7 @@ export const postAuthLogout = (req: Request, res: Response) => {
         if (req.isAuthenticated()) {
             return res.send("(server) ERROR: still logged in");
         }
-        return res.redirect( "http://localhost:5173");
+        return res.redirect( "https://achievement-full-stack-client.onrender.com");//client
     });
 }
 

@@ -31,7 +31,7 @@ app.use(session({
 
 //Used to allow client to make requests to the server
 app.use(cors({
-    origin: 'http://localhost:5173',
+    origin: 'https://achievement-full-stack-server.onrender.com',
     credentials: true,
 }));
 
@@ -48,8 +48,8 @@ passport.deserializeUser(function(obj : any, done) {
 });
 
 passport.use(new SteamStrategy({
-        returnURL: 'http://localhost:3000/auth/steam/return',
-        realm: 'http://localhost:3000/',
+        returnURL: 'https://achievement-full-stack-server.onrender.com/auth/steam/return', //server
+        realm: 'https://achievement-full-stack-client.onrender.com', //client
         apiKey: webAPIKey
     },
     async function(identifier, profile, done) {

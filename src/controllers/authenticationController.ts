@@ -40,6 +40,7 @@ export const checkAuth = (req: Request, res: Response) => {
         console.log("you are authenticated")
         res.json({ authenticated: true });
     } else {
+        console.log("you are not authenticated")
         res.json({ authenticated: false });
     }
 }

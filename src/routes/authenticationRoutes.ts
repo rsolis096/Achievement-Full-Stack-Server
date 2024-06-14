@@ -8,7 +8,7 @@ const router = Router();
 //login does not need an implementation
 router.get('/steam/login', passport.authenticate('steam'));
 
-router.get('/steam/return', authReturn);
+router.get('/steam/return',   passport.authenticate('steam', { failureRedirect: '/' }), authReturn);
 router.get('/steam/logout', postAuthLogout);
 router.get('/steam/checkAuthenticated', checkAuth);
 

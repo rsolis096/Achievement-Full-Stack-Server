@@ -56,7 +56,6 @@ passport.use(new SteamStrategy({
         apiKey: webAPIKey
     },
     async function(identifier, profile, done) {
-
         //Handle Errors
         //Return User Object (store into session, done by serialize and deserialize)
         //^ tested using req.isAuthenticated();

@@ -21,6 +21,9 @@ export const createUser = async (steamId : string, displayName: string, photos :
 export const getAuthReturn = (req: Request, res: Response) => {
     if(req.isAuthenticated()) {
         console.log("user is authenticated")
+        const redirectUrl = new URL('https://achievement-full-stack-client.onrender.com');
+        redirectUrl.searchParams.append('user', JSON.stringify(req.user)); // Add user data to URL
+        return res.redirect(redirectUrl.toString());
     }else{
         console.log("user is not authenticated")
     }

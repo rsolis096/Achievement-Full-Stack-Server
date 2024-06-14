@@ -35,7 +35,7 @@ app.use(session({
     saveUninitialized: true,
     cookie: {
         secure: false, // Ensures the browser only sends the cookie over HTTPS
-        sameSite: 'none', // Allows the cookie to be sent with cross-site requests
+        sameSite: 'lax', // Allows the cookie to be sent with cross-site requests
     }
 }));
 

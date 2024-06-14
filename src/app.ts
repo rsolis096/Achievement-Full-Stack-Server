@@ -26,8 +26,12 @@ app.use(session({
     secret: 'keyboard cat',
     resave: false,
     saveUninitialized: true,
-    cookie: { secure: false } //false because localhost
-}))
+    cookie: {
+        secure: true, // Ensures the browser only sends the cookie over HTTPS
+        sameSite: 'none', // Allows the cookie to be sent with cross-site requests
+        httpOnly: true // Ensures the cookie is only accessible via HTTP(S), not client-side JavaScript
+    }
+}));
 
 //Used to allow client to make requests to the server
 app.use(cors({

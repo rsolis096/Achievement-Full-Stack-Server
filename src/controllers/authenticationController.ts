@@ -18,14 +18,6 @@ export const createUser = async (steamId : string, displayName: string, photos :
 };
 
 
-export const getUserData = (req: Request, res: Response) => {
-    if (!req.isAuthenticated()) {
-        return res.json({ authenticated: false });
-    }
-    //console.log("Sending user data: ", req.user)
-    return res.json(req.user)
-}
-
 export const getAuthReturn = (req: Request, res: Response) => {
     if(req.isAuthenticated()) {
         console.log("user is authenticated")
@@ -38,10 +30,10 @@ export const getAuthReturn = (req: Request, res: Response) => {
 export const checkAuth = (req: Request, res: Response) => {
     if (req.isAuthenticated()) {
         console.log("you are authenticated")
-        res.json({ authenticated: true });
+        res.json({ authenticated: true, user:req.user });
     } else {
         console.log("you are not authenticated")
-        res.json({ authenticated: false });
+        res.json({ authenticated: false});
     }
 }
 

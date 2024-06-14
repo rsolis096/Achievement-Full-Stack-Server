@@ -22,6 +22,12 @@ app.use(express.static('public'));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
+//Used to allow client to make requests to the server
+app.use(cors({
+    origin: 'https://achievement-full-stack-client.onrender.com',
+    credentials: true,
+}));
+
 app.use(session({
     secret: 'keyboard cat',
     resave: false,
@@ -29,14 +35,7 @@ app.use(session({
     cookie: {
         secure: true, // Ensures the browser only sends the cookie over HTTPS
         sameSite: 'none', // Allows the cookie to be sent with cross-site requests
-        httpOnly: true // Ensures the cookie is only accessible via HTTP(S), not client-side JavaScript
     }
-}));
-
-//Used to allow client to make requests to the server
-app.use(cors({
-    origin: 'https://achievement-full-stack-client.onrender.com',
-    credentials: true,
 }));
 
 // Initialize Passport and restore authentication state from the session
@@ -53,7 +52,7 @@ passport.deserializeUser(function(obj : any, done) {
 
 passport.use(new SteamStrategy({
         returnURL: 'https://achievement-full-stack-server.onrender.com/auth/steam/return', //server
-        realm: 'https://achievement-full-stack-server.onrender.com', //client
+        realm: 'https://achievement-full-stack-server.onrender.com/', //server
         apiKey: webAPIKey
     },
     async function(identifier, profile, done) {

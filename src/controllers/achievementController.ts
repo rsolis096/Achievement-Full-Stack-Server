@@ -100,5 +100,6 @@ export const getGlobalAchievements = async (req: Request, res: Response) => {
         console.log("Error in getGlobalAchievements: ")
         const err = error as AxiosError
         console.log(err.response?.data)
+        res.json({error: err.response?.data})
     }
 };

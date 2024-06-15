@@ -8,7 +8,7 @@ import gameRoutes from './routes/gameRoutes.js';
 import achievementRoutes from './routes/achievementRoutes.js';
 import authenticationRoutes from "./routes/authenticationRoutes.js";
 import passport from "passport";
-import session from 'express-session';
+import session from 'cookie-session';
 import SteamStrategy from "passport-steam";
 
 import {findUserBySteamId, createUser} from "./controllers/authenticationController.js";
@@ -35,14 +35,9 @@ app.use(cors({
 
 app.use(session({
     secret: process.env.SECRET as string,
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-        sameSite: 'lax',
-        httpOnly: true,
-        maxAge: 24 * 60 * 60 * 1000 // 24 hours
-
-    }
+    sameSite: 'lax',
+    httpOnly: true,
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
 }));
 
 app.set('trust proxy', 1) // trust first proxy

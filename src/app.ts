@@ -1,7 +1,9 @@
 // src/app.ts
+import env from 'dotenv';
+env.config();
+
 import express from 'express';
 import cors from 'cors';
-import env from 'dotenv';
 import gameRoutes from './routes/gameRoutes.js';
 import achievementRoutes from './routes/achievementRoutes.js';
 import authenticationRoutes from "./routes/authenticationRoutes.js";
@@ -12,11 +14,14 @@ import SteamStrategy from "passport-steam";
 
 import {findUserBySteamId, createUser} from "./controllers/authenticationController.js";
 
-const webAPIKey = process.env.WEB_API_KEY as string;
-
-env.config();
 
 const app = express();
+
+// Acquire Environment Variables
+const WEB_API_KEY = process.env.WEB_API_KEY as string;
+const CLIENT_DOMAIN = process.env.CLIENT_DOMAIN as string;
+const SERVER_DOMAIN = process.env.SERVER_DOMAIN as string;
+
 
 //Define Middleware
 app.use(express.static('public'));
@@ -25,7 +30,7 @@ app.use(express.json());
 
 //Used to allow client to make requests to the server
 app.use(cors({
-    origin: 'https://completiontracker.com',
+    origin: CLIENT_DOMAIN,
     credentials: true,
 }));
 
@@ -54,9 +59,9 @@ passport.deserializeUser(function(obj : any, done) {
 });
 
 passport.use(new SteamStrategy({
-        returnURL: 'https://api.completiontracker.com/auth/steam/return', //server
-        realm: 'https://api.completiontracker.com/', //server
-        apiKey: webAPIKey
+        returnURL: SERVER_DOMAIN + '/auth/steam/return', //server
+        realm: SERVER_DOMAIN, //server
+        apiKey: WEB_API_KEY
     },
     async function(identifier, profile, done) {
         //Handle Errors

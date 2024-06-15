@@ -1,9 +1,10 @@
 // src/index.ts
+
 import app from './app.js';
 
-const port = 5432;
+const SERVER_PORT = parseInt(process.env.SERVER_PORT as string) || 5432;
 
-app.listen(port, () => {
-    console.log(`Server running on port: ${port}`);
+app.listen(SERVER_PORT, () => {
+    console.log(`Server running on port: ${SERVER_PORT}`);
 });
 

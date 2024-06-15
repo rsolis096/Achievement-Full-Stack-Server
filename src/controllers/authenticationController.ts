@@ -2,6 +2,8 @@ import { Request, Response } from 'express';
 
 import db from '../db/dbConfig.js';
 
+const CLIENT_DOMAIN = process.env.CLIENT_DOMAIN as string;
+
 export const findUserBySteamId = async (steamId : string) => {
     console.log("Checking user in database!")
     const result = await db.query('SELECT EXISTS (SELECT 1 FROM users WHERE steam_id = $1)', [steamId]);
@@ -27,15 +29,15 @@ export const authReturn = (req: Request, res: Response) => {
             }
             if (req.isAuthenticated()) {
                 console.log("User is authenticated");
-                return res.redirect(`https://completiontracker.com`); // Client URL
+                return res.redirect(CLIENT_DOMAIN); // Client URL
             } else {
                 console.log("User is not authenticated");
-                return res.redirect(`https://completiontracker.com`); // Redirect to login page
+                return res.redirect(CLIENT_DOMAIN); // Redirect to login page
             }
         });
     }else {
         console.log("User is not authenticated");
-        return res.redirect(`https://completiontracker.com`); // Redirect to login page
+        return res.redirect(CLIENT_DOMAIN); // Redirect to login page
     }
 }
 
@@ -61,7 +63,7 @@ export const postAuthLogout = (req: Request, res: Response) => {
         if (req.isAuthenticated()) {
             return res.send("(server) ERROR: still logged in");
         }
-        return res.redirect( "https://completiontracker.com");//client
+        return res.redirect( CLIENT_DOMAIN);//client
     });
 }
 

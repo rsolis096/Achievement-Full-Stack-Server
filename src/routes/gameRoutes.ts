@@ -1,10 +1,10 @@
 // src/routes/gameRoutes.ts
 import { Router } from 'express';
-import { getOwnedGames, getGamesSearch } from '../controllers/gameController.js';
+import {getGamesSearch, postUserLibrary} from '../controllers/gameController.js';
 
 const router = Router();
 
-router.post('/getGames', getOwnedGames);
+router.post('/getUserLibrary', postUserLibrary);
 router.post('/getGames/search', getGamesSearch);
 
 

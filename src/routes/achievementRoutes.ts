@@ -1,10 +1,16 @@
 // src/routes/achievementRoutes.ts
 import { Router } from 'express';
-import { getUserAchievements, getGlobalAchievements } from '../controllers/achievementController.js';
+import {
+    postUserAchievements,
+    postGlobalAchievements,
+    postGeneralAchievements
+} from '../controllers/achievementController.js';
 
 const router = Router();
 
-router.post('/getAchievements', getUserAchievements);
-router.post('/getGlobalAchievements', getGlobalAchievements)
+router.post('/getAchievements', postUserAchievements);
+router.post('/getGlobalAchievements', postGlobalAchievements)
+router.post('/getGeneralAchievements', postGeneralAchievements)
+
 
 export default router;

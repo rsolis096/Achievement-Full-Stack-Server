@@ -13,42 +13,41 @@ export const findUserBySteamId = async (steamId : string) => {
 export const createUser = async (steamId : string, displayName: string, photos : string[]) => {
     console.log("Writing user to database!")
     const result = await db.query(
-        'INSERT INTO users (steam_id, display_name, photos) VALUES ($1, $2, $3) RETURNING *',
+        'INSERT INTO users (steam_id, displayname, photos) VALUES ($1, $2, $3) RETURNING *',
         [steamId, displayName, photos]
     );
     return result.rows[0];
 };
 
-
 export const authReturn = (req: Request, res: Response) => {
-    console.log("Return From Steam - Session:", req.session);
     if (req.user) {
+        //Login the user to establish session
         req.login(req.user, (err) => {
             if (err) {
                 return res.status(500).send(err);
             }
             if (req.isAuthenticated()) {
-                console.log("User is authenticated");
+                console.log("Returned From Steam: User is authenticated");
                 return res.redirect(CLIENT_DOMAIN); // Client URL
             } else {
-                console.log("User is not authenticated");
+                console.log("Returned From Steam: User is not authenticated");
                 return res.redirect(CLIENT_DOMAIN); // Redirect to login page
             }
         });
-    }else {
+    } else {
         console.log("User is not authenticated");
         return res.redirect(CLIENT_DOMAIN); // Redirect to login page
     }
 }
 
 export const checkAuth = (req: Request, res: Response) => {
-    console.log("Check Authenticated - Session:", req.session);
+    //console.log("Check Authenticated - Session:", req.session);
     if (req.isAuthenticated()) {
-        console.log("you are authenticated")
-        res.json({ authenticated: true, user:req.user });
+        console.log("Page Load: User is authenticated");
+        return res.json({ authenticated: true, user: req.user });
     } else {
-        console.log("you are not authenticated")
-        res.json({ authenticated: false});
+        console.log("Page Load: User is not authenticated");
+        return res.json({ authenticated: false });
     }
 }
 
@@ -63,6 +62,7 @@ export const postAuthLogout = (req: Request, res: Response) => {
         if (req.isAuthenticated()) {
             return res.send("(server) ERROR: still logged in");
         }
+        //User Logged out
         return res.redirect( CLIENT_DOMAIN);//client
     });
 }

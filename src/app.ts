@@ -11,7 +11,6 @@ import passport from "passport";
 import session from 'express-session';
 import SteamStrategy from "passport-steam";
 
-
 import {findUserBySteamId, createUser} from "./controllers/authenticationController.js";
 
 
@@ -35,12 +34,14 @@ app.use(cors({
 }));
 
 app.use(session({
-    secret: 'keyboard cat',
-    resave: true,
-    saveUninitialized: true,
+    secret: process.env.SECRET as string,
+    resave: false,
+    saveUninitialized: false,
     cookie: {
-        secure: false, // Ensures the browser only sends the cookie over HTTPS
-        sameSite: 'lax', // Allows the cookie to be sent with cross-site requests
+        sameSite: 'lax',
+        httpOnly: true,
+        maxAge: 24 * 60 * 60 * 1000 // 24 hours
+
     }
 }));
 
@@ -64,10 +65,6 @@ passport.use(new SteamStrategy({
         apiKey: WEB_API_KEY
     },
     async function(identifier, profile, done) {
-        //Handle Errors
-        //Return User Object (store into session, done by serialize and deserialize)
-        //^ tested using req.isAuthenticated();
-        //^ data accessed using req.user
         try{
             console.log("Login requested")
             let exists = false;

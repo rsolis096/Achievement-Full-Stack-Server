@@ -8,7 +8,7 @@ const webAPIKey = process.env.WEB_API_KEY as string;
 const accessToken = process.env.ACCESS_TOKEN as string;
 const steamID = process.env.STEAM_ID as string;
 
-const getOwnedAppsURL = `https://api.steampowered.com/IPlayerService/GetOwnedGames/v1/?access_token=${accessToken}&steamid=${steamID}&include_appinfo=true`;
+//const getOwnedAppsURL = `https://api.steampowered.com/IPlayerService/GetOwnedGames/v1/?access_token=${accessToken}&steamid=${steamID}&include_appinfo=true`;
 const getGameAchievements : string = `https://api.steampowered.com/ISteamUserStats/GetSchemaForGame/v2/?key=${webAPIKey}&appid=`
 
 interface Game {
@@ -46,6 +46,7 @@ export const postUserLibrary = async (req: Request, res: Response) => {
         if(req.isAuthenticated()) {
 
             const steamUser: SteamUser = extractSteamUser(req.user);
+            const getOwnedAppsURL = `https://api.steampowered.com/IPlayerService/GetOwnedGames/v1/?access_token=${accessToken}&steamid=${steamUser.id}&include_appinfo=true`;
 
             //Retrieve User Game Library from Steam API
             const response: AxiosResponse = await axios.get(getOwnedAppsURL);

@@ -9,6 +9,7 @@ import passport from "passport";
 import session from 'express-session';
 import SteamStrategy from "passport-steam";
 
+
 import {findUserBySteamId, createUser} from "./controllers/authenticationController.js";
 
 const webAPIKey = process.env.WEB_API_KEY as string;
@@ -22,38 +23,42 @@ app.use(express.static('public'));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-app.use(session({
-    secret: 'keyboard cat',
-    resave: false,
-    saveUninitialized: true,
-    cookie: { secure: false } //false because localhost
-}))
-
 //Used to allow client to make requests to the server
 app.use(cors({
-    origin: 'http://localhost:5173',
+    origin: 'https://completiontracker.com',
     credentials: true,
 }));
+
+app.use(session({
+    secret: 'keyboard cat',
+    resave: true,
+    saveUninitialized: true,
+    cookie: {
+        secure: false, // Ensures the browser only sends the cookie over HTTPS
+        sameSite: 'lax', // Allows the cookie to be sent with cross-site requests
+    }
+}));
+
+app.set('trust proxy', 1) // trust first proxy
 
 // Initialize Passport and restore authentication state from the session
 app.use(passport.initialize());
 app.use(passport.session());
 
 passport.serializeUser(function(user, done) {
-    done(null, user);
+    return done(null, user);
 });
 
 passport.deserializeUser(function(obj : any, done) {
-    done(null, obj);
+    return done(null, obj);
 });
 
 passport.use(new SteamStrategy({
-        returnURL: 'http://localhost:3000/auth/steam/return',
-        realm: 'http://localhost:3000/',
+        returnURL: 'https://api.completiontracker.com/auth/steam/return', //server
+        realm: 'https://api.completiontracker.com/', //server
         apiKey: webAPIKey
     },
     async function(identifier, profile, done) {
-
         //Handle Errors
         //Return User Object (store into session, done by serialize and deserialize)
         //^ tested using req.isAuthenticated();

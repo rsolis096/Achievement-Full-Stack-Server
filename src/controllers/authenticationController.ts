@@ -18,29 +18,35 @@ export const createUser = async (steamId : string, displayName: string, photos :
 };
 
 
-export const getUserData = (req: Request, res: Response) => {
-    if (!req.isAuthenticated()) {
-        return res.json({ authenticated: false });
+export const authReturn = (req: Request, res: Response) => {
+    console.log("Return From Steam - Session:", req.session);
+    if (req.user) {
+        req.login(req.user, (err) => {
+            if (err) {
+                return res.status(500).send(err);
+            }
+            if (req.isAuthenticated()) {
+                console.log("User is authenticated");
+                return res.redirect(`https://completiontracker.com`); // Client URL
+            } else {
+                console.log("User is not authenticated");
+                return res.redirect(`https://completiontracker.com`); // Redirect to login page
+            }
+        });
+    }else {
+        console.log("User is not authenticated");
+        return res.redirect(`https://completiontracker.com`); // Redirect to login page
     }
-    //console.log("Sending user data: ", req.user)
-    return res.json(req.user)
-}
-
-export const getAuthReturn = (req: Request, res: Response) => {
-    if(req.isAuthenticated()) {
-        console.log("user is authenticated")
-    }else{
-        console.log("user is not authenticated")
-    }
-    return res.redirect( "http://localhost:5173");
 }
 
 export const checkAuth = (req: Request, res: Response) => {
+    console.log("Check Authenticated - Session:", req.session);
     if (req.isAuthenticated()) {
         console.log("you are authenticated")
-        res.json({ authenticated: true });
+        res.json({ authenticated: true, user:req.user });
     } else {
-        res.json({ authenticated: false });
+        console.log("you are not authenticated")
+        res.json({ authenticated: false});
     }
 }
 
@@ -55,7 +61,7 @@ export const postAuthLogout = (req: Request, res: Response) => {
         if (req.isAuthenticated()) {
             return res.send("(server) ERROR: still logged in");
         }
-        return res.redirect( "http://localhost:5173");
+        return res.redirect( "https://completiontracker.com");//client
     });
 }
 

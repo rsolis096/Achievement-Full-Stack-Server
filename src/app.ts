@@ -1,7 +1,9 @@
 // src/app.ts
+import env from 'dotenv';
+env.config();
+
 import express from 'express';
 import cors from 'cors';
-import env from 'dotenv';
 import gameRoutes from './routes/gameRoutes.js';
 import achievementRoutes from './routes/achievementRoutes.js';
 import authenticationRoutes from "./routes/authenticationRoutes.js";
@@ -9,14 +11,16 @@ import passport from "passport";
 import session from 'express-session';
 import SteamStrategy from "passport-steam";
 
-
 import {findUserBySteamId, createUser} from "./controllers/authenticationController.js";
 
-const webAPIKey = process.env.WEB_API_KEY as string;
-
-env.config();
 
 const app = express();
+
+// Acquire Environment Variables
+const WEB_API_KEY = process.env.WEB_API_KEY as string;
+const CLIENT_DOMAIN = process.env.CLIENT_DOMAIN as string;
+const SERVER_DOMAIN = process.env.SERVER_DOMAIN as string;
+
 
 //Define Middleware
 app.use(express.static('public'));
@@ -25,17 +29,19 @@ app.use(express.json());
 
 //Used to allow client to make requests to the server
 app.use(cors({
-    origin: 'https://completiontracker.com',
+    origin: CLIENT_DOMAIN,
     credentials: true,
 }));
 
 app.use(session({
-    secret: 'keyboard cat',
-    resave: true,
-    saveUninitialized: true,
+    secret: process.env.SECRET as string,
+    resave: false,
+    saveUninitialized: false,
     cookie: {
-        secure: false, // Ensures the browser only sends the cookie over HTTPS
-        sameSite: 'lax', // Allows the cookie to be sent with cross-site requests
+        sameSite: 'lax',
+        httpOnly: true,
+        maxAge: 24 * 60 * 60 * 1000 // 24 hours
+
     }
 }));
 
@@ -54,15 +60,11 @@ passport.deserializeUser(function(obj : any, done) {
 });
 
 passport.use(new SteamStrategy({
-        returnURL: 'https://api.completiontracker.com/auth/steam/return', //server
-        realm: 'https://api.completiontracker.com/', //server
-        apiKey: webAPIKey
+        returnURL: SERVER_DOMAIN + '/auth/steam/return', //server
+        realm: SERVER_DOMAIN, //server
+        apiKey: WEB_API_KEY
     },
     async function(identifier, profile, done) {
-        //Handle Errors
-        //Return User Object (store into session, done by serialize and deserialize)
-        //^ tested using req.isAuthenticated();
-        //^ data accessed using req.user
         try{
             console.log("Login requested")
             let exists = false;

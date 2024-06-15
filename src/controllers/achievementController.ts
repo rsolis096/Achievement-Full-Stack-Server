@@ -2,13 +2,10 @@
 import { Request, Response } from 'express';
 import axios, {AxiosError, AxiosResponse} from 'axios';
 import db from '../db/dbConfig.js';
-import { handleError } from '../utils/errorHandler.js';
 
 const webAPIKey = process.env.WEB_API_KEY as string;
-const steamID = process.env.STEAM_ID as string;
 const accessToken = process.env.ACCESS_TOKEN as string;//Refreshes every 24 hours
 
-const getUserAchievementsURL = `https://api.steampowered.com/ISteamUserStats/GetPlayerAchievements/v1/?key=${webAPIKey}&steamid=${steamID}&appid=`;
 const getGlobalAchievementsURL = `https://api.steampowered.com/ISteamUserStats/GetGlobalAchievementPercentagesForApp/v2/?access_token=${accessToken}&gameid=`;
 const getGeneralAchievementsURL:string = `https://api.steampowered.com/ISteamUserStats/GetSchemaForGame/v2/?key=${webAPIKey}&appid=`
 
@@ -54,7 +51,7 @@ export const postUserAchievements = async (req: Request, res: Response) => {
         }
 
         //If above fails, attempt to get the user library from Steam
-        const achievementsFromAPI: UserAchievement[] = await fetchUserAchievementsFromSteamAPI(req.body.appid)
+        const achievementsFromAPI: UserAchievement[] = await fetchUserAchievementsFromSteamAPI(req.body.appid, steamUser.id)
         if(achievementsFromAPI.length > 0) {
             console.log("User Achievements sent via Steam API for appid: ", req.body.appid)
             return res.send(achievementsFromAPI);
@@ -181,17 +178,18 @@ const fetchUserAchievementsFromDB = async (appid : string, steam_id : string) =>
         return achievementsFromDB;
     }
     catch(error){
-        const err = error as AxiosError
+        //const err = error as AxiosError
         console.log("Error in fetchUserAchievementsFromDB: ")
         return []
     }
 }
 
 //Used as a backup if the user achievements aren't in the database
-const fetchUserAchievementsFromSteamAPI = async (appid : string) => {
+const fetchUserAchievementsFromSteamAPI = async (appid : string, steamId :string) => {
 
     try{
         //Reach out to SteamAPI
+        const getUserAchievementsURL = `https://api.steampowered.com/ISteamUserStats/GetPlayerAchievements/v1/?key=${webAPIKey}&steamid=${steamId}&appid=`;
         const response: AxiosResponse = await axios.get(getUserAchievementsURL.concat(appid.toString()));
         const achievementsFromAPI: UserAchievement[] = response.data.playerstats.achievements;
         //Update the Database with the retrieved info
@@ -206,9 +204,12 @@ const fetchUserAchievementsFromSteamAPI = async (appid : string) => {
         return achievementsFromAPI;
     }
     catch(error){
-        const err = error as AxiosError
+        //const err = error as AxiosError
         console.log("Error in fetchUserAchievementsFromDB: ")
         return []
     }
 }
+
+
+
 

@@ -4,12 +4,11 @@ import axios, { AxiosResponse } from 'axios';
 import db from '../db/dbConfig.js';
 import { handleError } from '../utils/errorHandler.js';
 
-const webAPIKey = process.env.WEB_API_KEY as string;
+// webAPIKey = process.env.WEB_API_KEY as string;
 const accessToken = process.env.ACCESS_TOKEN as string;
-const steamID = process.env.STEAM_ID as string;
 
 //const getOwnedAppsURL = `https://api.steampowered.com/IPlayerService/GetOwnedGames/v1/?access_token=${accessToken}&steamid=${steamID}&include_appinfo=true`;
-const getGameAchievements : string = `https://api.steampowered.com/ISteamUserStats/GetSchemaForGame/v2/?key=${webAPIKey}&appid=`
+//const getGameAchievements : string = `https://api.steampowered.com/ISteamUserStats/GetSchemaForGame/v2/?key=${webAPIKey}&appid=`
 
 interface Game {
     appid: number;

@@ -12,7 +12,6 @@ const db = new pg.Client({
     port: parseInt(process.env.DB_PORT as string),
     ssl: true //Needed for production
 });
-
 db.connect();
 
 export default db;

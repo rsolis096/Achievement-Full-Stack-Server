@@ -4,13 +4,15 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+const dbSSL = process.env.SSL as string == "true";
+
 const db = new pg.Client({
     user: process.env.DB_USER,
     host: process.env.DB_HOST,
     database: process.env.DB_NAME,
     password: process.env.DB_PASSWORD,
     port: parseInt(process.env.DB_PORT as string),
-    ssl: true //Needed for production
+    ssl: dbSSL //Needed for production
 });
 db.connect();
 

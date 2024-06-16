@@ -10,7 +10,7 @@ const db = new pg.Client({
     database: process.env.DB_NAME,
     password: process.env.DB_PASSWORD,
     port: parseInt(process.env.DB_PORT as string),
-    ssl: true
+    //ssl: true //Needed for production
 });
 
 db.connect();

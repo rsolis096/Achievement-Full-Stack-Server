@@ -52,18 +52,13 @@ export const checkAuth = (req: Request, res: Response) => {
 }
 
 //get for testing, should be post since client requests it (authenticationRouter)
-export const postAuthLogout = (req: Request, res: Response) => {
-    req.logout(function(err) {
+export const logout = async (req: Request, res: Response) => {
+    req.logOut((err: any) => {
         if (err) {
-            console.log(err);
-            return res.status(500).send("Error logging out");
+            return res.status(500).send({ message: 'Logout failed: ' + err });
         }
-        // Check if the user is logged out
-        if (req.isAuthenticated()) {
-            return res.send("(server) ERROR: still logged in");
-        }
-        //User Logged out
-        return res.redirect( CLIENT_DOMAIN);//client
     });
+    req.session = null as any;
+    return res.json(req.isAuthenticated())
 }
 

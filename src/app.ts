@@ -21,7 +21,6 @@ const WEB_API_KEY = process.env.WEB_API_KEY as string;
 const CLIENT_DOMAIN = process.env.CLIENT_DOMAIN as string;
 const SERVER_DOMAIN = process.env.SERVER_DOMAIN as string;
 
-
 //Define Middleware
 app.use(express.static('public'));
 app.use(express.urlencoded({ extended: true }));
@@ -34,10 +33,11 @@ app.use(cors({
 }));
 
 app.use(session({
+    name: 'session',
     secret: process.env.SECRET as string,
     sameSite: 'lax',
     httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    maxAge: 24 * 60 * 60 * 1000, // 24 hours
 }));
 
 app.set('trust proxy', 1) // trust first proxy

@@ -1,6 +1,6 @@
 // src/controllers/gameController.ts
 import { Request, Response } from 'express';
-import axios, { AxiosResponse } from 'axios';
+import axios, {AxiosError, AxiosResponse} from 'axios';
 import db from '../db/dbConfig.js';
 import { handleError } from '../utils/errorHandler.js';
 
@@ -14,7 +14,6 @@ interface Game {
     appid: number;
     name: string;
     playtime_forever: number;
-    img_icon_url: string;
     has_community_visible_stats: boolean;
     achievements: Achievement[];
 }
@@ -76,24 +75,55 @@ export const postUserLibrary = async (req: Request, res: Response) => {
 //Used to parse database for matching search results
 export const getGamesSearch = async (req: Request, res: Response) => {
     try {
+        console.log("Search Request Made")
         const lookupTerm : string = req.body.lookup;
+        const steamUser: SteamUser = extractSteamUser(req.user);
+        const query: string = `
+            WITH matched_games AS 
+            (
+                SELECT
+                    app_id,
+                    name,
+                    has_community_visible_stats,
+                    global_achievements
+                FROM
+                    games
+                WHERE
+                    name 
+                ILIKE 
+                    '%' || $1 || '%'
+            )
+            SELECT
+                mg.app_id,
+                mg.name AS name,
+                ug.playtime,
+                ug.user_achievements
+            FROM
+                matched_games mg
+            JOIN
+                user_games ug ON mg.app_id = ug.app_id
+            WHERE
+                ug.steam_id = $2`
 
         //Attempt to get User Game Library from database
-        const result = await db.query('SELECT * FROM games WHERE name ILIKE $1 LIMIT $2', [`%${lookupTerm}%`, 10]);
-
+        const result = await db.query(query, [lookupTerm, steamUser.id]);
+        console.log(result.rows)
         //YOU MUST SEND A RESPONSE
         return res.status(200).send(result.rows)
     } catch (error) {
-        handleError(res, error as Error, 'An error occurred while processing the request.');
+        const err = error as AxiosError
+        console.log(err);
     }
 };
 
-//Helper Functions
+/*##################
+  HELPER FUNCTIONS
+##################*/
 
 //Used to write a set of games to the global games table
 const addGlobalGames = async (games: Game[]) => {
     for (const game of games) {
-        const queryText = 'INSERT INTO games(title, app_id, has_community_visible_stats, global_achievements) VALUES($1, $2, $3, $4) ON CONFLICT (app_id) DO NOTHING';
+        const queryText = 'INSERT INTO games(name, app_id, has_community_visible_stats, global_achievements) VALUES($1, $2, $3, $4) ON CONFLICT (app_id) DO NOTHING';
         await db.query(queryText, [game.name, game.appid ,  game.has_community_visible_stats, JSON.stringify(game.achievements)]);
     }
 };

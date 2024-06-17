@@ -1,11 +1,12 @@
 // src/routes/gameRoutes.ts
 import { Router } from 'express';
-import {getGamesSearch, postUserLibrary} from '../controllers/gameController.js';
+import {postUserGamesSearch, postUserGames} from '../controllers/gameController.js';
 
 const router = Router();
 
-router.post('/getUserLibrary', postUserLibrary);
-router.post('/getGames/search', getGamesSearch);
+
+router.post('/getUserGames', postUserGames);
+router.post('/getUserGames/search', postUserGamesSearch);
 
 
 export default router;

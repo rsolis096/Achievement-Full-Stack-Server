@@ -7,6 +7,7 @@ import {GameAchievement, GlobalAchievement, UserAchievement, SteamUser, extractS
 
 const webAPIKey = process.env.WEB_API_KEY as string;
 const accessToken = process.env.ACCESS_TOKEN as string;//Refreshes every 24 hours
+const demoSteamId: string = "76561198065706942"
 
 //Corresponds to GlobalAchievement Type
 const getGlobalAchievementsURL = `https://api.steampowered.com/ISteamUserStats/GetGlobalAchievementPercentagesForApp/v2/?access_token=${accessToken}&gameid=`;
@@ -17,9 +18,15 @@ const getGameAchievementsURL:string = `https://api.steampowered.com/ISteamUserSt
 //Retrieve User Achievement Data
 export const postUserAchievements = async (req: Request, res: Response) => {
     try {
+        let steamUser : SteamUser = {} as SteamUser
+        if(req.query.demo){
+            req.user = { id: demoSteamId }; //This enables authentication automatically
+            steamUser.id = demoSteamId;
+        }else{
+            steamUser = extractSteamUser(req.user);
+        }
 
         //First attempt to get the library from the database
-        const steamUser: SteamUser = extractSteamUser(req.user);
         const responseFromDB: UserAchievement[] = await fetchUserAchievementsFromDB(req.body.appid, steamUser.id)
 
         if(responseFromDB) { //Can be null if not in database yet, would need to write it if it is
@@ -46,7 +53,13 @@ export const postUserAchievements = async (req: Request, res: Response) => {
 // Retrieve Global Achievement Data
 export const postGlobalAchievements = async (req: Request, res: Response) => {
     try {
-
+        let steamUser : SteamUser = {} as SteamUser
+        if(req.query.demo){
+            req.user = { id: demoSteamId }; //This enables authentication automatically
+            steamUser.id = demoSteamId;
+        }else{
+            steamUser = extractSteamUser(req.user);
+        }
         //First attempt to get the global achievement data from the database
         const responseFromDB: GlobalAchievement[] = await fetchGlobalAchievementsFromDB(req.body.appid)
         if(responseFromDB) {
@@ -73,7 +86,13 @@ export const postGlobalAchievements = async (req: Request, res: Response) => {
 // Retrieve General Achievement Data (icons and stuff)
 export const postGameAchievements = async (req: Request, res: Response) => {
     try {
-
+        let steamUser : SteamUser = {} as SteamUser
+        if(req.query.demo){
+            req.user = { id: demoSteamId }; //This enables authentication automatically
+            steamUser.id = demoSteamId;
+        }else{
+            steamUser = extractSteamUser(req.user);
+        }
         //First attempt to get the global achievement data from the database
         const responseFromDB: GameAchievement[] = await fetchGameAchievementsFromDB(req.body.appid)
 

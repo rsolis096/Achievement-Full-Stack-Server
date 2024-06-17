@@ -3,13 +3,16 @@ import { Request, Response } from 'express';
 import axios, {AxiosError, AxiosResponse} from 'axios';
 import db from '../db/dbConfig.js';
 import {OwnedGame, SteamUser, extractSteamUser} from "../Interfaces/types.js";
-
-// webAPIKey = process.env.WEB_API_KEY as string;
+const demoSteamId: string = "76561198065706942"
 const accessToken = process.env.ACCESS_TOKEN as string;
 
 //Called immediately when the webpage is loaded
 export const postUserGames = async (req: Request, res: Response) => {
     try {
+        //Authenticate this request if its in demo mode
+        if(req.query.demo){
+            req.user = { id: demoSteamId }; //This enables authentication automatically
+        }
         if(req.isAuthenticated()) {
             const steamUser: SteamUser = extractSteamUser(req.user);
 
@@ -90,6 +93,9 @@ export const postUserGames = async (req: Request, res: Response) => {
 //Used to parse database for matching search results
 export const postUserGamesSearch = async (req: Request, res: Response) => {
     try {
+        if(req.query.demo){
+            req.user = { id: demoSteamId }; //This enables authentication automatically
+        }
         const steamUser: SteamUser = extractSteamUser(req.user);
         const query: string = `
             WITH matched_games AS 

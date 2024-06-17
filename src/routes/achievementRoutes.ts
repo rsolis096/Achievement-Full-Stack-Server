@@ -3,14 +3,14 @@ import { Router } from 'express';
 import {
     postUserAchievements,
     postGlobalAchievements,
-    postGeneralAchievements
+    postGameAchievements
 } from '../controllers/achievementController.js';
 
 const router = Router();
 
-router.post('/getAchievements', postUserAchievements);
+router.post('/getUserAchievements', postUserAchievements);
 router.post('/getGlobalAchievements', postGlobalAchievements)
-router.post('/getGeneralAchievements', postGeneralAchievements)
+router.post('/getGameAchievements', postGameAchievements)
 
 
 export default router;

@@ -2,21 +2,10 @@
 import { Request, Response } from 'express';
 import axios, {AxiosError, AxiosResponse} from 'axios';
 import db from '../db/dbConfig.js';
-import {OwnedGame, SteamUser} from "../Interfaces/types.js";
+import {OwnedGame, SteamUser, extractSteamUser} from "../Interfaces/types.js";
 
 // webAPIKey = process.env.WEB_API_KEY as string;
 const accessToken = process.env.ACCESS_TOKEN as string;
-
-//const getOwnedAppsURL = `https://api.steampowered.com/IPlayerService/GetOwnedGames/v1/?access_token=${accessToken}&steamid=${steamID}&include_appinfo=true`;
-//const getGameAchievements : string = `https://api.steampowered.com/ISteamUserStats/GetSchemaForGame/v2/?key=${webAPIKey}&appid=`
-
-
-
-//Extract steam user data from req.user
-const extractSteamUser = (user: any): SteamUser => {
-    const { id, displayName, photos } = user;
-    return { id, displayName, photos };
-};
 
 //Called immediately when the webpage is loaded
 export const postUserGames = async (req: Request, res: Response) => {

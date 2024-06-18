@@ -12,6 +12,7 @@ export const postUserGames = async (req: Request, res: Response) => {
         //Authenticate this request if its in demo mode
         if(req.query.demo){
             req.user = { id: demoSteamId }; //This enables authentication automatically
+            console.log("Demo mode used")
         }
         if(req.isAuthenticated()) {
             const steamUser: SteamUser = extractSteamUser(req.user);

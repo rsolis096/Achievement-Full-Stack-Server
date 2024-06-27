@@ -15,6 +15,14 @@ const getGlobalAchievementsURL = `https://api.steampowered.com/ISteamUserStats/G
 //Corresponds to GameAchievement Type
 const getGameAchievementsURL:string = `https://api.steampowered.com/ISteamUserStats/GetSchemaForGame/v2/?key=${webAPIKey}&appid=`
 
+
+
+/*##################
+  MAIN ENDPOINTS
+##################*/
+
+
+
 //Retrieve User Achievement Data
 export const postUserAchievements = async (req: Request, res: Response) => {
     try {

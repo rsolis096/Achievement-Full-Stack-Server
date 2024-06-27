@@ -6,3 +6,10 @@ https://api.steampowered.com/ISteamUserStats/GetSchemaForGame/v2/?key=&appid=
 
 GetOwnedGames - Returns a list of the players games
 https://api.steampowered.com/IPlayerService/GetOwnedGames/v1/?key=&steamid=&include_appinfo=true
+
+
+GetMostPlayedGames - Returns a list of the currently most played games
+https://api.steampowered.com/ISteamChartsService/GetMostPlayedGames/v1/?access_token=
+
+^ Same as above but more info, limited to 1 request per second
+https://steamspy.com/api.php?request=top100in2weeks

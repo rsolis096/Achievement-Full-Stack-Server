@@ -37,3 +37,11 @@ export const extractSteamUser = (user: any): SteamUser => {
     return { id, displayName, photos };
 };
 
+export interface TopGame {
+    appid: number;
+    name: string;
+    developer: string;
+    positive: number;
+    negative: number;
+}
+

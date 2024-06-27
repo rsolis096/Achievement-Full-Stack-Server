@@ -2,9 +2,61 @@
 import { Request, Response } from 'express';
 import axios, {AxiosError, AxiosResponse} from 'axios';
 import db from '../db/dbConfig.js';
-import {OwnedGame, SteamUser, extractSteamUser} from "../Interfaces/types.js";
+import {OwnedGame, SteamUser, extractSteamUser, TopGame} from "../Interfaces/types.js";
 const demoSteamId: string = "76561198065706942"
 const accessToken = process.env.ACCESS_TOKEN as string;
+
+//Returns a list of appids of current top games
+const getMostPlayedGames :string = `https://steamspy.com/api.php?request=top100in2weeks`
+
+/*##################
+  MAIN ENDPOINTS
+##################*/
+
+export const getTopGames = async (req : Request, res: Response) =>{
+
+    try{
+
+        //First attempt to get the library from the database
+        const queryText: string = 'SELECT * FROM top_games'
+        const result  = await db.query(queryText);
+        const responseFromDB : TopGame[] = result.rows;
+
+        if(responseFromDB){
+            if(responseFromDB.length > 0){
+                console.log("Top games retrieved from database.")
+                return res.send(responseFromDB);
+            }
+        }
+
+        //Get global achievement data from the steam API
+        const responseFromAPI: AxiosResponse = await axios.get(getMostPlayedGames);
+        const data : TopGame[] = Object.values(responseFromAPI.data);
+        console.log("Top games retrieved from SteamSpy API.")
+
+        //Write to the DB
+        if (data.length > 0) {
+            const queryText = 'insert into top_games (appid, name, developer, positive, negative) VALUES ($1, $2, $3, $4, $5) ON CONFLICT (appid) do nothing';
+            try {
+                for (const game of data) {
+                    await db.query(queryText, [game.appid, game.name, game.developer, game.positive, game.negative]);
+                }            
+            }catch(error){
+                console.error('Error executing query to write to database:', error);
+            }
+        }
+
+        return res.send(data)
+
+    }
+    
+    catch(error){
+        const err = error as AxiosError
+        console.log("Error in fetchGlobalAchievementsFromSteamAPI: ", err)
+        return []
+    }
+
+};
 
 //Called immediately when the webpage is loaded
 export const postUserGames = async (req: Request, res: Response) => {

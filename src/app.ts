@@ -35,8 +35,9 @@ app.use(cors({
 app.use(session({
     name: 'session',
     secret: process.env.SECRET as string,
-    sameSite: 'lax',
-    httpOnly: true,
+    sameSite: 'lax', 
+    secure: false, // For development, set to false
+    httpOnly: false, //True in prod
     maxAge: 24 * 60 * 60 * 1000, // 24 hours
 }));
 

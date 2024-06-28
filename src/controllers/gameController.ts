@@ -78,25 +78,27 @@ export const getTopWeeklyGames = async (req: Request, res: Response) => {
     }
 }
 
-
 //Called after the user signs in
 export const postUserGames = async (req: Request, res: Response) => {
     try {
         //Authenticate this request if its in demo mode
-        if(req.query.demo){
+        if(req.body.demo){
             req.user = { id: demoSteamId }; //This enables authentication automatically
             console.log("Demo mode used")
         }
         if(req.isAuthenticated()) {
+            console.log("Request to get user games made!")
             const steamUser: SteamUser = extractSteamUser(req.user);
 
             // Verify that the user exists
-            const checkUserExists = await db.query("SELECT 1 FROM user_games WHERE steam_id= $1", [steamUser.id]);
+            const checkUserExists = await db.query("SELECT 1 FROM users WHERE steam_id= $1", [steamUser.id]);
             const checkUserExistsResult : number = checkUserExists.rows[0]['?column?'];
+
             // The user does not have a library stored
-            if(checkUserExistsResult != 1) {
+            if(checkUserExistsResult != 1){
                 //Fetch the user library from the steam API
                 const getOwnedAppsURL = `https://api.steampowered.com/IPlayerService/GetOwnedGames/v1/?access_token=${accessToken}&steamid=${steamUser.id}&include_appinfo=true`;
+
                 const responseAPI: AxiosResponse = await axios.get(getOwnedAppsURL);
                 const gamesFromAPI: OwnedGame[] = responseAPI.data.response.games;
 
@@ -119,11 +121,9 @@ export const postUserGames = async (req: Request, res: Response) => {
                      "has_community_visible_stats": true,
                      "playtime_forever": 1146,
                  */
-
                 return res.send(gamesFromAPI)
             }else{
                 // The User has a library stored (syncing must be supported later)
-
                 // Retrieve it from the database
                 const query : string = `
                     Select 
@@ -155,7 +155,9 @@ export const postUserGames = async (req: Request, res: Response) => {
                 }
             }
 
-        }else{
+        }
+        else{
+            console.log("User is not logged in!")
             return res.json( {error : "User Is Not Logged In"} );
         }
     } catch (error) {
@@ -167,8 +169,8 @@ export const postUserGames = async (req: Request, res: Response) => {
 //Used to parse database for matching search results, only used when logged in
 export const postUserGamesSearch = async (req: Request, res: Response) => {
     try {
-        if(req.query.demo){
-            req.user = { id: demoSteamId }; //This enables authentication automatically
+        if(req.body.demo){
+            req.user = { id: demoSteamId }; //This enables authentication automatically using a demo account (mine)
         }
         const steamUser: SteamUser = extractSteamUser(req.user);
         const query: string = `
@@ -222,8 +224,8 @@ export const postUserGamesSearch = async (req: Request, res: Response) => {
 //Adds the users Owned Games to the global Games Table
 const addGlobalGames = async (games: OwnedGame[]) => {
     for (const game of games) {
-        const queryText = 'INSERT INTO games(name, appid, has_community_visible_stats) VALUES($1, $2, $3) ON CONFLICT (appid) DO NOTHING';
-        await db.query(queryText, [game.name, game.appid ,  game.has_community_visible_stats]);
+        const queryText = 'UPDATE games SET has_community_visible_stats = $1 WHERE appid = $2;';
+        await db.query(queryText, [game.has_community_visible_stats, game.appid]);
     }
 };
 

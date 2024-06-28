@@ -5,9 +5,9 @@ import db from '../db/dbConfig.js';
 
 import {GameAchievement, GlobalAchievement, UserAchievement, SteamUser, extractSteamUser} from "../Interfaces/types.js";
 
-const webAPIKey = process.env.WEB_API_KEY as string;
+const webAPIKey = process.env.WEB_API_KEY as string; //small one
 const accessToken = process.env.ACCESS_TOKEN as string;//Refreshes every 24 hours
-const demoSteamId: string = "76561198065706942"
+const demoSteamId= process.env.DEMO_STEAM_ID as string
 
 //Corresponds to GlobalAchievement Type
 const getGlobalAchievementsURL = `https://api.steampowered.com/ISteamUserStats/GetGlobalAchievementPercentagesForApp/v2/?access_token=${accessToken}&gameid=`;

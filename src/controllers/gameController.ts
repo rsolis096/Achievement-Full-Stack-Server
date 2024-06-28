@@ -2,63 +2,84 @@
 import { Request, Response } from 'express';
 import axios, {AxiosError, AxiosResponse} from 'axios';
 import db from '../db/dbConfig.js';
-import {OwnedGame, SteamUser, extractSteamUser, TopGame} from "../Interfaces/types.js";
-const demoSteamId: string = "76561198065706942"
-const accessToken = process.env.ACCESS_TOKEN as string;
+import {OwnedGame, SteamUser, extractSteamUser, Game, WeeklyGame} from "../Interfaces/types.js";
+
+//Important Steam API values
+const demoSteamId= process.env.DEMO_STEAM_ID as string
+const webAPIKey = process.env.WEB_API_KEY as string; // small one
+const accessToken = process.env.ACCESS_TOKEN as string; // long, 24 hour one
 
 //Returns a list of appids of current top games
-const getMostPlayedGames :string = `https://steamspy.com/api.php?request=top100in2weeks`
+const getAllAppsURL :string = `https://api.steampowered.com/IStoreService/GetAppList/v1/?key=${webAPIKey}`
+const getTopWeeklySellersURL : string =`https://api.steampowered.com/IStoreTopSellersService/GetWeeklyTopSellers/v1/?access_token=${accessToken}
+&country_code=ca&input_json=%7B%22context%22%3A%7B%22language%22%3A%22english%22%2C%22country_code%22%3A%22ca%22%7D%7D`
+const getMostPlayedURL : string = `https://api.steampowered.com/ISteamChartsService/GetMostPlayedGames/v1/?key=${webAPIKey}`
 
 /*##################
   MAIN ENDPOINTS
 ##################*/
 
-export const getTopGames = async (req : Request, res: Response) =>{
-
+export const getMostPlayedGames = async (req: Request, res: Response) => {
     try{
 
-        //First attempt to get the library from the database
-        const queryText: string = 'SELECT * FROM top_games'
-        const result  = await db.query(queryText);
-        const responseFromDB : TopGame[] = result.rows;
+        //If above fails, get from steam api
+        //Fetch the user library from the steam API
+        const responseAPI: AxiosResponse = await axios.get(getMostPlayedURL);
+        const data: WeeklyGame[] = responseAPI.data.response.ranks;
 
-        if(responseFromDB){
-            if(responseFromDB.length > 0){
-                console.log("Top games retrieved from database.")
-                return res.send(responseFromDB);
-            }
-        }
 
-        //Get global achievement data from the steam API
-        const responseFromAPI: AxiosResponse = await axios.get(getMostPlayedGames);
-        const data : TopGame[] = Object.values(responseFromAPI.data);
-        console.log("Top games retrieved from SteamSpy API.")
-
-        //Write to the DB
-        if (data.length > 0) {
-            const queryText = 'insert into top_games (appid, name, developer, positive, negative) VALUES ($1, $2, $3, $4, $5) ON CONFLICT (appid) do nothing';
-            try {
-                for (const game of data) {
-                    await db.query(queryText, [game.appid, game.name, game.developer, game.positive, game.negative]);
-                }            
-            }catch(error){
-                console.error('Error executing query to write to database:', error);
-            }
-        }
-
-        return res.send(data)
-
+        //Get the name from the database and append it to the data elements, return that modified array
+        const queryText: string = 'SELECT name FROM games WHERE appid = $1;';
+        const weeklyGames: WeeklyGame[] = await Promise.all(
+            data.map(async (item: { appid: number; rank: number }) => {
+              const result = await db.query(queryText, [item.appid]);
+              return {
+                appid: item.appid,
+                rank: item.rank,
+                name: result.rows.length > 0 ? result.rows[0].name : "undefined",
+              };
+            })
+          );
+        //Send the data to the client
+        return res.send(weeklyGames);
     }
-    
-    catch(error){
+    catch (error) {
         const err = error as AxiosError
-        console.log("Error in fetchGlobalAchievementsFromSteamAPI: ", err)
-        return []
+        //console.log(err)
+        return res.status(500).json({response: err})
     }
+}
 
-};
+export const getTopWeeklyGames = async (req: Request, res: Response) => {
+    try{
 
-//Called immediately when the webpage is loaded
+        //If above fails, get from steam api
+        //Fetch the user library from the steam API
+        const responseAPI: AxiosResponse = await axios.get(getTopWeeklySellersURL);
+        const data: WeeklyGame[] = responseAPI.data.response.ranks;
+
+        const bestGames: WeeklyGame[] = (
+            data.map((item, index : number) => {
+              return {
+                appid: item.appid,
+                rank: item.rank,
+                name: responseAPI.data.response.ranks[index].item.name as string
+              };
+            })
+        )
+        //Send the data to the client
+        return res.send(bestGames);
+
+    }
+    catch (error) {
+        const err = error as AxiosError
+        console.log(err)
+        return res.status(500).json({response: err})
+    }
+}
+
+
+//Called after the user signs in
 export const postUserGames = async (req: Request, res: Response) => {
     try {
         //Authenticate this request if its in demo mode
@@ -143,7 +164,7 @@ export const postUserGames = async (req: Request, res: Response) => {
     }
 };
 
-//Used to parse database for matching search results
+//Used to parse database for matching search results, only used when logged in
 export const postUserGamesSearch = async (req: Request, res: Response) => {
     try {
         if(req.query.demo){
@@ -215,3 +236,90 @@ const addUserLibrary = async (userId : string, games : OwnedGame[]) => {
         );
     }
 }
+
+
+/*##################
+  SCHEDULED FUNCTIONS
+##################*/
+
+//This endpoint is used to build the database of all games and is not meant to be used regularly
+//Each game is returned as the type Game but only with appid and name.
+//This endpoint should be scheduled weekly to build a library of new games
+const getAllApps = async () =>{
+
+    try{
+
+        //Initialize Game Data array
+        let data : Game[] = [];
+
+        //Other Important Data
+        let have_more_results : boolean = true;
+        let last_appid : number = 0;
+
+        //Next request data
+        let counter = 0;
+        while ( have_more_results) {
+            console.log("Iteration ", counter, "starting at ", last_appid)
+            //Get global achievement data from the steam API
+            const response: AxiosResponse = await axios.get(getAllAppsURL + `&last_appid=${last_appid}`);
+
+            data.push(... response.data.response.apps)
+
+            if (data.length > 0) {
+                const queryText = 'insert into games (appid, name) VALUES ($1, $2) ON CONFLICT (appid) do nothing';
+                try {
+                    for (const game of data) {
+                        if(game.appid && game.name.length > 0){
+                            await db.query(queryText, [game.appid, game.name]);
+                        }
+                    }            
+                }catch(error){
+                    console.error('Error executing query to write to database:', error);
+                }
+            }
+
+            console.log("Iteration ", counter, "starting at ", last_appid, " length of data: ", data.length)
+            data = []
+
+            //Check if theres more data to be retrieved
+            if('have_more_results' in response.data.response && 'last_appid' in response.data.response){
+                have_more_results = response.data.response.have_more_results;
+                last_appid = response.data.response.last_appid;
+            }else{
+                have_more_results = false;
+                last_appid = 0;
+            }
+            counter++;
+        }
+
+    // Write to the DB in bulk
+    if (data.length > 0) {
+        const queryText = 'INSERT INTO games (appid, name) VALUES ';
+        const values: string[] = [];
+        const params: (number | string)[] = [];
+  
+        data.forEach((game, index) => {
+          if (game.appid && game.name.length > 0) {
+            values.push(`($${index * 2 + 1}, $${index * 2 + 2})`);
+            params.push(game.appid, game.name);
+          }
+        });
+  
+        const finalQuery = queryText + values.join(', ') + ' ON CONFLICT (appid) DO NOTHING';
+  
+        try {
+          await db.query(finalQuery, params);
+        } catch (error) {
+          console.error('Error executing query to write to database:', error);
+        }
+      }
+      return true;
+    }
+    
+    catch(error){
+        const err = error as AxiosError
+        console.log("Error in fetchGlobalAchievementsFromSteamAPI: ", err)
+        return false
+    }
+
+};

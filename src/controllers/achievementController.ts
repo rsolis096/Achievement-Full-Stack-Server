@@ -26,6 +26,7 @@ export const postUserAchievements = async (req: Request, res: Response) => {
 
         if(req.body.demo){
             req.user = { id: demoSteamId }; //This enables authentication automatically
+            steamUser.id = demoSteamId;
         }else{
             steamUser = extractSteamUser(req.user);
         }
@@ -147,15 +148,16 @@ const fetchUserAchievementsFromDB = async (appid : string, steam_id : string) =>
 
     try{
         // Attempt to get from database
+        console.log("Steam ID ", steam_id)
         const queryText: string = 'SELECT ua.user_achievements FROM user_games ua WHERE ua.steam_id = $1 AND ua.appid = $2'
         const result = await db.query(queryText, [steam_id, appid]);
         const achievementsFromDB: UserAchievement[] = result.rows[0].user_achievements;
         return achievementsFromDB;
     }
     catch(error){
-        //const err = error as AxiosError
-        console.log("Error in fetchUserAchievementsFromDB: ")
-        return []
+        const err = error as AxiosError
+        console.log("Error in fetchUserAchievementsFromDB: ", err)
+        return [] as UserAchievement[]
     }
 }
 
@@ -184,6 +186,6 @@ const fetchUserAchievementsFromSteamAPI = async (appid : string, steamId :string
     catch(error){
         //const err = error as AxiosError
         console.log("Error in fetchUserAchievementsFromDB: ")
-        return []
+        return [] as UserAchievement[]
     }
 }

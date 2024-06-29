@@ -27,7 +27,6 @@ export const getMostPlayedGames = async (req: Request, res: Response) => {
         const responseAPI: AxiosResponse = await axios.get(getMostPlayedURL);
         const data: WeeklyGame[] = responseAPI.data.response.ranks;
 
-
         //Get the name from the database and append it to the data elements, return that modified array
         const queryText: string = 'SELECT name FROM games WHERE appid = $1;';
         const weeklyGames: WeeklyGame[] = await Promise.all(
@@ -96,24 +95,26 @@ export const postUserGames = async (req: Request, res: Response) => {
 
             // The user does not have a library stored
             if(checkUserExistsResult != 1){
+
+                //Fetch the user library from the Steam API and record their library and playtimes
+                
                 //Fetch the user library from the steam API
                 const getOwnedAppsURL = `https://api.steampowered.com/IPlayerService/GetOwnedGames/v1/?access_token=${accessToken}&steamid=${steamUser.id}&include_appinfo=true`;
 
                 const responseAPI: AxiosResponse = await axios.get(getOwnedAppsURL);
                 const gamesFromAPI: OwnedGame[] = responseAPI.data.response.games;
 
-                // Response contains an array of these items:
-                // Write these to the Global Database
+                //Update the global database to specify if a game has achievements or not
+                await addHasVisibleStats(gamesFromAPI);
+
+                // Response contains an array of these items corresponding to games in the users library:
                 // "appid": 220,
                 // "name": "Half-Life 2",
                 // "has_community_visible_stats": true,
-                await addGlobalGames(gamesFromAPI);
-
-                // Keep this for the user and fill their library:
                 // "playtime_forever": 1146,
                 await addUserLibrary(steamUser.id, gamesFromAPI);
 
-                //Return this response to the user
+                //Return this response to the user, their library
                 //Includes
                 /*
                      "appid": 220,
@@ -148,6 +149,7 @@ export const postUserGames = async (req: Request, res: Response) => {
                          "has_community_visible_stats": true,
                          "playtime_forever": 1146,
                      */
+                    console.log("Response from database: ", gamesFromDB)
                     return res.send(gamesFromDB);
                 }catch(error){
                     const err =error as AxiosError;
@@ -222,7 +224,7 @@ export const postUserGamesSearch = async (req: Request, res: Response) => {
 ##################*/
 
 //Adds the users Owned Games to the global Games Table
-const addGlobalGames = async (games: OwnedGame[]) => {
+const addHasVisibleStats = async (games: OwnedGame[]) => {
     for (const game of games) {
         const queryText = 'UPDATE games SET has_community_visible_stats = $1 WHERE appid = $2;';
         await db.query(queryText, [game.has_community_visible_stats, game.appid]);

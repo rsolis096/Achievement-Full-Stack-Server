@@ -3,33 +3,26 @@ import { Request, Response } from 'express';
 import axios, {AxiosError, AxiosResponse} from 'axios';
 import db from '../db/dbConfig.js';
 
-import {GameAchievement, GlobalAchievement, UserAchievement, SteamUser, extractSteamUser} from "../Interfaces/types.js";
+import {GameAchievement, UserAchievement, SteamUser, extractSteamUser, Game} from "../Interfaces/types.js";
 
 const webAPIKey = process.env.WEB_API_KEY as string; //small one
 const accessToken = process.env.ACCESS_TOKEN as string;//Refreshes every 24 hours
 const demoSteamId= process.env.DEMO_STEAM_ID as string
 
-//Corresponds to GlobalAchievement Type
-const getGlobalAchievementsURL = `https://api.steampowered.com/ISteamUserStats/GetGlobalAchievementPercentagesForApp/v2/?access_token=${accessToken}&gameid=`;
-
 //Corresponds to GameAchievement Type
-const getGameAchievementsURL:string = `https://api.steampowered.com/ISteamUserStats/GetSchemaForGame/v2/?key=${webAPIKey}&appid=`
-
+const getGameAchievementsURL = `https://api.steampowered.com/IPlayerService/GetGameAchievements/v1/?key=${webAPIKey}&language=english&appid=`;
 
 
 /*##################
   MAIN ENDPOINTS
 ##################*/
 
-
-
 //Retrieve User Achievement Data
 export const postUserAchievements = async (req: Request, res: Response) => {
     try {
         let steamUser : SteamUser = {} as SteamUser
-        if(req.query.demo){
+        if(req.body.demo){
             req.user = { id: demoSteamId }; //This enables authentication automatically
-            steamUser.id = demoSteamId;
         }else{
             steamUser = extractSteamUser(req.user);
         }
@@ -59,64 +52,31 @@ export const postUserAchievements = async (req: Request, res: Response) => {
 };
 
 // Retrieve Global Achievement Data
-export const postGlobalAchievements = async (req: Request, res: Response) => {
-    try {
-        let steamUser : SteamUser = {} as SteamUser
-        if(req.query.demo){
-            req.user = { id: demoSteamId }; //This enables authentication automatically
-            steamUser.id = demoSteamId;
-        }else{
-            steamUser = extractSteamUser(req.user);
-        }
-        //First attempt to get the global achievement data from the database
-        const responseFromDB: GlobalAchievement[] = await fetchGlobalAchievementsFromDB(req.body.appid)
-        if(responseFromDB) {
-            if (responseFromDB.length > 0) {
-                console.log("Global Achievements sent via database for appid: ", req.body.appid)
-                return res.send(responseFromDB);
-            }
-        }
-
-        //If above fails, attempt to get the user library from Steam
-        const responseFromAPI: GlobalAchievement[] = await fetchGlobalAchievementsFromSteamAPI(req.body.appid)
-        if(responseFromAPI.length > 0) {
-            console.log("Global Achievements sent via Steam API for appid: ", req.body.appid)
-            return res.send(responseFromAPI);
-        }
-    }
-    catch(error){
-        const err = error as AxiosError
-        console.log("Error in postGlobalAchievements: ", err)
-        return res.json({error: "An error occurred while processing the request: ", err})
-    }
-};
-
-// Retrieve General Achievement Data (icons and stuff)
 export const postGameAchievements = async (req: Request, res: Response) => {
     try {
         let steamUser : SteamUser = {} as SteamUser
-        if(req.query.demo){
+        if(req.body.demo){
             req.user = { id: demoSteamId }; //This enables authentication automatically
-            steamUser.id = demoSteamId;
-        }else{
+        }
+        else{
             steamUser = extractSteamUser(req.user);
         }
+
         //First attempt to get the global achievement data from the database
         const responseFromDB: GameAchievement[] = await fetchGameAchievementsFromDB(req.body.appid)
-
-        if(responseFromDB){
-            if(responseFromDB.length > 0 ) {
+        if(responseFromDB) {
+            if (responseFromDB.length > 0) {
                 console.log("Game Achievements sent via database for appid: ", req.body.appid)
                 return res.send(responseFromDB);
             }
         }
 
-        //If above fails, attempt to get the user library from Steam
         const responseFromAPI: GameAchievement[] = await fetchGameAchievementsFromSteamAPI(req.body.appid)
         if(responseFromAPI.length > 0) {
-            console.log("Game Achievements sent via Steam API for appid: ", req.body.appid)
+            console.log("Global Achievements sent via Steam API for appid: ", req.body.appid)
             return res.send(responseFromAPI);
         }
+        return res.json({error: "game has no achievements"})
     }
     catch(error){
         const err = error as AxiosError
@@ -124,19 +84,20 @@ export const postGameAchievements = async (req: Request, res: Response) => {
         return res.json({error: "An error occurred while processing the request: ", err})
     }
 };
+
 
 /*##################
   HELPER FUNCTIONS
 ##################*/
 
 //First we look in the database to get the user achievements
-const fetchGlobalAchievementsFromDB = async (appid : string) => {
+const fetchGameAchievementsFromDB = async (appid : string) => {
 
     try{
         //Attempt to retrieve from database
-        const queryText: string = 'SELECT global_achievements FROM games WHERE appid = $1'
+        const queryText: string = 'SELECT game_achievements FROM games WHERE appid = $1'
         const result = await db.query(queryText, [appid]);
-        const achievementsFromDB: GlobalAchievement[] = result.rows[0].global_achievements;
+        const achievementsFromDB: GameAchievement[] = result.rows[0].game_achievements;
         return achievementsFromDB;
     }
     catch(error){
@@ -147,27 +108,29 @@ const fetchGlobalAchievementsFromDB = async (appid : string) => {
 }
 
 //Used as a backup if the user achievements aren't in the database
-const fetchGlobalAchievementsFromSteamAPI = async (appid : string) => {
+const fetchGameAchievementsFromSteamAPI = async (appid : string) => {
 
     try {
         //Get global achievement data from the steam API
-        const response: AxiosResponse = await axios.get(getGlobalAchievementsURL.concat(appid.toString()));
-        const globalAchievementsFromAPI: GlobalAchievement[] = response.data.achievementpercentages.achievements;
+        const response: AxiosResponse = await axios.get(getGameAchievementsURL.concat(appid.toString()));
+        const gameAchievementsFromAPI: GameAchievement[] = response.data.response.achievements;
 
         //Update the database with the retrieved info
-        if (globalAchievementsFromAPI.length > 0) {
-            const queryText = 'UPDATE games SET global_achievements = $1 WHERE appid = $2';
+        if (gameAchievementsFromAPI.length > 0) {
+            const queryText = 'UPDATE games SET game_achievements = $1 WHERE appid = $2';
             try {
-                await db.query(queryText, [JSON.stringify(globalAchievementsFromAPI), appid]);
+                await db.query(queryText, [JSON.stringify(gameAchievementsFromAPI), appid]);
             } catch (error) {
                 console.error('Error executing query to write to database:', error);
             }
+            return gameAchievementsFromAPI;
         }
-        return globalAchievementsFromAPI;
+        return [] as GameAchievement[]
+
     }
     catch(error){
         const err = error as AxiosError
-        console.log("Error in fetchGlobalAchievementsFromSteamAPI: ", err)
+        console.log("Error in fetchGameAchievementsFromSteamAPI: ", err)
         return []
     }
 }
@@ -214,49 +177,3 @@ const fetchUserAchievementsFromSteamAPI = async (appid : string, steamId :string
         return []
     }
 }
-
-//First we look in the database to get the user achievements
-const fetchGameAchievementsFromDB = async (appid : string) => {
-
-    try{
-        // Attempt to get from database
-        const queryText: string = 'SELECT game_achievements FROM games WHERE appid = $1'
-        const result = await db.query(queryText, [appid]);
-        const achievementsFromDB: GameAchievement[] = result.rows[0].game_achievements;
-        return achievementsFromDB;
-    }
-    catch(error){
-        //const err = error as AxiosError
-        console.log("Error in fetchGameAchievementsFromDB: ")
-        return []
-    }
-}
-
-//Used as a backup if the user achievements aren't in the database
-const fetchGameAchievementsFromSteamAPI = async (appid : string) => {
-
-    try{
-        //Reach out to SteamAPI
-        const response: AxiosResponse = await axios.get(getGameAchievementsURL.concat(appid.toString()));
-        const result: GameAchievement[] = response.data.game.availableGameStats.achievements;
-
-        //Update the Database with the retrieved info
-        if (result.length > 0) {
-            const queryText = 'UPDATE games SET game_achievements = $1 WHERE appid = $2';
-            try {
-                await db.query(queryText, [JSON.stringify(result), appid]);
-            }catch(error){
-                console.error('Error executing query to write to database:', error);
-            }
-        }
-        return result;
-    }
-    catch(error){
-        //const err = error as AxiosError
-        console.log("Error in fetchGameAchievementsFromDB: ")
-        return []
-    }
-}
-
-
-

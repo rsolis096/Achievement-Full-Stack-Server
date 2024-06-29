@@ -6,7 +6,6 @@ import db from '../db/dbConfig.js';
 import {GameAchievement, UserAchievement, SteamUser, extractSteamUser, Game} from "../Interfaces/types.js";
 
 const webAPIKey = process.env.WEB_API_KEY as string; //small one
-const accessToken = process.env.ACCESS_TOKEN as string;//Refreshes every 24 hours
 const demoSteamId= process.env.DEMO_STEAM_ID as string
 
 //Corresponds to GameAchievement Type
@@ -17,10 +16,14 @@ const getGameAchievementsURL = `https://api.steampowered.com/IPlayerService/GetG
   MAIN ENDPOINTS
 ##################*/
 
-//Retrieve User Achievement Data
+/* Retrieve User Achievement Data
+Retrieves the users unlock statistics for a game given the appid passed in the request body
+It returns an array of UserAchievement items.
+*/
 export const postUserAchievements = async (req: Request, res: Response) => {
     try {
         let steamUser : SteamUser = {} as SteamUser
+
         if(req.body.demo){
             req.user = { id: demoSteamId }; //This enables authentication automatically
         }else{
@@ -29,7 +32,6 @@ export const postUserAchievements = async (req: Request, res: Response) => {
 
         //First attempt to get the library from the database
         const responseFromDB: UserAchievement[] = await fetchUserAchievementsFromDB(req.body.appid, steamUser.id)
-
         if(responseFromDB) { //Can be null if not in database yet, would need to write it if it is
             if (responseFromDB.length > 0) {
                 console.log("User Achievements sent via database for appid: ", req.body.appid)
@@ -51,16 +53,12 @@ export const postUserAchievements = async (req: Request, res: Response) => {
     }
 };
 
-// Retrieve Global Achievement Data
+/* Retrieve Game Achievement Data
+Retrieves the Game Achievements associated with a game by appid sent in request body
+This data is not user specific.
+*/
 export const postGameAchievements = async (req: Request, res: Response) => {
     try {
-        let steamUser : SteamUser = {} as SteamUser
-        if(req.body.demo){
-            req.user = { id: demoSteamId }; //This enables authentication automatically
-        }
-        else{
-            steamUser = extractSteamUser(req.user);
-        }
 
         //First attempt to get the global achievement data from the database
         const responseFromDB: GameAchievement[] = await fetchGameAchievementsFromDB(req.body.appid)
@@ -90,7 +88,10 @@ export const postGameAchievements = async (req: Request, res: Response) => {
   HELPER FUNCTIONS
 ##################*/
 
-//First we look in the database to get the user achievements
+/*
+Fetches the Game achievements from the database given an appid
+Returns object of type GameAchievement[]
+*/
 const fetchGameAchievementsFromDB = async (appid : string) => {
 
     try{
@@ -107,7 +108,10 @@ const fetchGameAchievementsFromDB = async (appid : string) => {
     }
 }
 
-//Used as a backup if the user achievements aren't in the database
+/*
+Fetches the Game achievements from the steam API given an appid
+Returns object of type GameAchievement[]
+*/
 const fetchGameAchievementsFromSteamAPI = async (appid : string) => {
 
     try {
@@ -135,7 +139,10 @@ const fetchGameAchievementsFromSteamAPI = async (appid : string) => {
     }
 }
 
-//First we look in the database to get the user achievements
+/*
+Fetches the User achievements from the database given an appid and steam id
+Returns object of type UserAchievement[]
+*/
 const fetchUserAchievementsFromDB = async (appid : string, steam_id : string) => {
 
     try{
@@ -152,7 +159,10 @@ const fetchUserAchievementsFromDB = async (appid : string, steam_id : string) =>
     }
 }
 
-//Used as a backup if the user achievements aren't in the database
+/*
+Fetches the User achievements from the database given an appid and steam id
+Returns object of type UserAchievement[]
+*/
 const fetchUserAchievementsFromSteamAPI = async (appid : string, steamId :string) => {
 
     try{

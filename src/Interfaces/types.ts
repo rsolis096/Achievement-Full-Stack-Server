@@ -36,7 +36,6 @@ export const extractSteamUser = (user: any): SteamUser => {
 export interface Game{
     appid: number;
     name: string;
-    
 }
 
 export interface WeeklyGame{

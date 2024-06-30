@@ -33,8 +33,8 @@ export const getAppInfo = async (req : Request, res:Response) => {
 
 export const getMostPlayedGames = async (req: Request, res: Response) => {
     try{
-        console.log("Get All Apps")
-        getAllApps()
+        //console.log("Get All Apps")
+        //getAllApps()
         //If above fails, get from steam api
         //Fetch the user library from the steam API
         const responseAPI: AxiosResponse = await axios.get(getMostPlayedURL);

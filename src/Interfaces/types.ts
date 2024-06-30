@@ -5,6 +5,12 @@ export interface OwnedGame {
     has_community_visible_stats: boolean;
 }
 
+export interface App{
+    type: string, //"game" or "dlc"
+    name: string;
+    appid: number;
+}
+
 export interface GameAchievement {
     internal_name: string,
     localized_name: string,

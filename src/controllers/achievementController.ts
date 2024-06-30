@@ -148,7 +148,6 @@ const fetchUserAchievementsFromDB = async (appid : string, steam_id : string) =>
 
     try{
         // Attempt to get from database
-        console.log("Steam ID ", steam_id)
         const queryText: string = 'SELECT ua.user_achievements FROM user_games ua WHERE ua.steam_id = $1 AND ua.appid = $2'
         const result = await db.query(queryText, [steam_id, appid]);
         const achievementsFromDB: UserAchievement[] = result.rows[0].user_achievements;

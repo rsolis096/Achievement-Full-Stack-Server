@@ -2,7 +2,7 @@
 import { Request, Response } from 'express';
 import axios, {AxiosError, AxiosResponse} from 'axios';
 import db from '../db/dbConfig.js';
-import {OwnedGame, SteamUser, extractSteamUser, Game, WeeklyGame} from "../Interfaces/types.js";
+import {OwnedGame, SteamUser, extractSteamUser, App, WeeklyGame} from "../Interfaces/types.js";
 
 //Important Steam API values
 const demoSteamId= process.env.DEMO_STEAM_ID as string
@@ -14,10 +14,22 @@ const getAllAppsURL :string = `https://api.steampowered.com/IStoreService/GetApp
 const getTopWeeklySellersURL : string =`https://api.steampowered.com/IStoreTopSellersService/GetWeeklyTopSellers/v1/?access_token=${accessToken}
 &country_code=ca&input_json=%7B%22context%22%3A%7B%22language%22%3A%22english%22%2C%22country_code%22%3A%22ca%22%7D%7D`
 const getMostPlayedURL : string = `https://api.steampowered.com/ISteamChartsService/GetMostPlayedGames/v1/?key=${webAPIKey}`
-
+const getAppInfoURL : string = `https://store.steampowered.com/api/appdetails?appids=`
 /*##################
   MAIN ENDPOINTS
 ##################*/
+
+export const getAppInfo = async (req : Request, res:Response) => {
+    const appid : string = req.body.appid
+    const responseAPI : AxiosResponse = await axios.get(getAppInfoURL + appid)
+    const data : App =
+    {
+        name: responseAPI.data[appid].data.name,
+        type: responseAPI.data[appid].data.type,
+        appid: parseInt(appid)
+    }
+    return res.send(data);
+}
 
 export const getMostPlayedGames = async (req: Request, res: Response) => {
     try{
@@ -254,7 +266,7 @@ const getAllApps = async () =>{
     try{
 
         //Initialize Game Data array
-        let data : Game[] = [];
+        let data : App[] = [];
 
         //Other Important Data
         let have_more_results : boolean = true;

@@ -33,7 +33,8 @@ export const getAppInfo = async (req : Request, res:Response) => {
 
 export const getMostPlayedGames = async (req: Request, res: Response) => {
     try{
-
+        console.log("Get All Apps")
+        getAllApps()
         //If above fails, get from steam api
         //Fetch the user library from the steam API
         const responseAPI: AxiosResponse = await axios.get(getMostPlayedURL);
@@ -161,7 +162,6 @@ export const postUserGames = async (req: Request, res: Response) => {
                          "has_community_visible_stats": true,
                          "playtime_forever": 1146,
                      */
-                    console.log("Response from database: ", gamesFromDB)
                     return res.send(gamesFromDB);
                 }catch(error){
                     const err =error as AxiosError;
@@ -262,7 +262,7 @@ const addUserLibrary = async (userId : string, games : OwnedGame[]) => {
 //Each game is returned as the type Game but only with appid and name.
 //This endpoint should be scheduled weekly to build a library of new games
 const getAllApps = async () =>{
-
+    console.log("inside get all apps")
     try{
 
         //Initialize Game Data array

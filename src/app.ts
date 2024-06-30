@@ -36,8 +36,8 @@ app.use(session({
     name: 'session',
     secret: process.env.SECRET as string,
     sameSite: 'lax', 
-    secure: false, // For development, set to false
-    httpOnly: false, //True in prod
+    secure: process.env.SSL == "false" ? false : true, // For development, set to false
+    httpOnly: process.env.SSL == "false" ? true : false, //True in prod
     maxAge: 24 * 60 * 60 * 1000, // 24 hours
 }));
 

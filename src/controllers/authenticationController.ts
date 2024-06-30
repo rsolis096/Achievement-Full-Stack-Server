@@ -22,7 +22,7 @@ export const createUser = async (steamId : string, displayName: string, photos :
 export const authReturn = (req: Request, res: Response) => {
     if (req.user) {
         //Login the user to establish session
-        req.login(req.user, (err) => {
+        req.logIn(req.user, (err) => {
             if (err) {
                 return res.status(500).send(err);
             }
@@ -41,7 +41,8 @@ export const authReturn = (req: Request, res: Response) => {
 }
 
 export const checkAuth = (req: Request, res: Response) => {
-    //console.log("Check Authenticated - Session:", req.session);
+    //console.log("Check Authenticated - ", req.session);
+    //console.log("Check Authenticated1 - ", req.user);
     if (req.isAuthenticated()) {
         console.log("Page Load: User is authenticated");
         return res.json({ authenticated: true, user: req.user });
@@ -59,6 +60,6 @@ export const logout = async (req: Request, res: Response) => {
         }
     });
     req.session = null as any;
-    return res.json(req.isAuthenticated())
+    return res.json({ authenticated: req.isAuthenticated() });
 }
 

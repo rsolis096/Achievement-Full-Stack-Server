@@ -5,18 +5,20 @@ export interface OwnedGame {
     has_community_visible_stats: boolean;
 }
 
-export interface GlobalAchievement{
-    name : string;
-    percent: number;
+export interface App{
+    type: string, //"game" or "dlc"
+    name: string;
+    appid: number;
 }
 
 export interface GameAchievement {
-    name: string;
-    displayName: string;
-    hidden: number
-    description: string;
-    icon: string;
-    icongray: string;
+    internal_name: string,
+    localized_name: string,
+    localized_desc: string,
+    icon: string,
+    icon_gray: string,
+    hidden: boolean,
+    player_percent_unlocked: string
 }
 
 export interface UserAchievement {
@@ -36,4 +38,15 @@ export const extractSteamUser = (user: any): SteamUser => {
     const { id, displayName, photos } = user;
     return { id, displayName, photos };
 };
+
+export interface Game{
+    appid: number;
+    name: string;
+}
+
+export interface WeeklyGame{
+    appid: number;
+    rank: number;
+    name : string;
+}
 

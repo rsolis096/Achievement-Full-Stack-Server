@@ -1,8 +1,55 @@
 GetPlayerAchievements - Returns coded steam Achievement by appID for user with steamid
 https://api.steampowered.com/ISteamUserStats/GetPlayerAchievements/v1/?key=X&steamid=X&appid=X
 
-GetSchemaForGame - Returns Achievement descriptions for a game (Not associated with Steamid), includes icons
-https://api.steampowered.com/ISteamUserStats/GetSchemaForGame/v2/?key=&appid=
 
 GetOwnedGames - Returns a list of the players games
 https://api.steampowered.com/IPlayerService/GetOwnedGames/v1/?key=&steamid=&include_appinfo=true
+
+
+## Returns a list of all apps on steam (appid, name)
+https://api.steampowered.com/IStoreService/GetAppList/v1/?key=&last_appid=0max_results=100
+- There is about 200,000 games total.
+- Should be ran weekly to build a database of games
+- In .have_more_results : bool specifies if there is more to be retrieved, use .last_appid : number to specify the start of the next get request,
+via the "last_appid" parameter 
+- In .apps array, each item has:
+appid: number
+name : string
+
+
+
+
+## Returns Top 20 Sellers
+https://api.steampowered.com/IStoreTopSellersService/GetWeeklyTopSellers/v1/?access_token=
+&country_code=ca&input_json=%7B%22context%22%3A%7B%22language%22%3A%22english%22%2C%22country_code%22%3A%22ca%22%7D%7D
+
+- In .ranks array, each item has:
+rank : number, 
+appid:number,  
+item.name
+
+- It also contains pricing information. and lots of other cool stuff
+
+
+
+
+## Returns weekly top 100 weekly games by player count (app id, rank, last week rank)
+https://api.steampowered.com/ISteamChartsService/GetMostPlayedGames/v1/?key=
+
+- In .ranks array, each item has:
+rank : number, 
+appid:number,  
+concurrent_in_game: number,
+peak_in_game: number
+
+
+
+## Returns Top games by concurrent players
+https://api.steampowered.com/ISteamChartsService/GetGamesByConcurrentPlayers/v1/?access_token=
+&input_json=%7B%22context%22%3A%7B%22language%22%3A%22english%22%2C%22country_code%22%3A%22ca%22%7D%7D
+
+- In .ranks array, each item has:
+rank : number, 
+appid:number,  
+concurrent_in_game: number,
+peak_in_game: number

@@ -237,21 +237,51 @@ export const postUserGamesSearch = async (req: Request, res: Response) => {
 
 //Adds the users Owned Games to the global Games Table
 const addHasVisibleStats = async (games: OwnedGame[]) => {
-    for (const game of games) {
-        const queryText = 'UPDATE games SET has_community_visible_stats = $1 WHERE appid = $2;';
-        await db.query(queryText, [game.has_community_visible_stats, game.appid]);
+    const batchSize: number = 20
+    for (let i = 0; i < games.length; i += batchSize) {
+        const batch = games.slice(i, i + batchSize);
+        const updates = batch
+            .filter(game => game.appid !== undefined && game.has_community_visible_stats !== undefined)
+            .map(game => `(${game.appid}, ${game.has_community_visible_stats})`)
+            .join(',');
+
+        if (updates.length === 0) continue; // Skip empty batches
+        
+        const queryText = `
+            UPDATE games
+            SET has_community_visible_stats = updates.has_community_visible_stats
+            FROM (VALUES ${updates}) AS updates(appid, has_community_visible_stats)
+            WHERE games.appid = updates.appid
+        `;
+
+        try {
+            await db.query(queryText);
+        } catch (error) {
+            console.error('Error executing batch update:', error);
+        }
     }
 };
 
 //Write the users Owned Games to the Owned Games Table
-const addUserLibrary = async (userId : string, games : OwnedGame[]) => {
-    for (const game of games) {
-        await db.query(
-            'INSERT INTO user_games (steam_id, appid, playtime_forever) VALUES ($1, $2, $3) ON CONFLICT (steam_id, appid) DO NOTHING',
-            [userId, game.appid, game.playtime_forever]
-        );
+const addUserLibrary = async (userId: string, games: OwnedGame[]) => {
+    const batchSize: number = 20
+    for (let i = 0; i < games.length; i += batchSize) {
+        const batch = games.slice(i, i + batchSize);
+        const values = batch.map(game => `('${userId}', ${game.appid}, ${game.playtime_forever})`).join(',');
+
+        const queryText = `
+            INSERT INTO user_games (steam_id, appid, playtime_forever)
+            VALUES ${values}
+            ON CONFLICT (steam_id, appid) DO NOTHING
+        `;
+
+        try {
+            await db.query(queryText);
+        } catch (error) {
+            console.error('Error executing batch insert:', error);
+        }
     }
-}
+};
 
 
 /*##################

@@ -10,7 +10,7 @@ router.post('/getUserGames/search', postUserGamesSearch);
 router.get('/getMostPlayedGames', getMostPlayedGames);
 router.get('/getTopWeekly', getTopWeeklyGames);
 router.post('/getAppInfo', getAppInfo);
-router.get('/getAppList/testpath', getAllAppsV2)
+//router.get('/getAppList/', getAllAppsV2)
 
 
 

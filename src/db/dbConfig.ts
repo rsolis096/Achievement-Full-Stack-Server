@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const dbSSL = process.env.SSL as string == "true";
+const dbSSL : boolean = process.env.SSL as string == "true";
 
 const db = new pg.Client({
     user: process.env.DB_USER,

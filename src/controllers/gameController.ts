@@ -102,11 +102,11 @@ export const postUserGames = async (req: Request, res: Response) => {
             console.log("Request to get user games made!")
             const steamUser: SteamUser = extractSteamUser(req.user);
 
-            // Verify that the user exists
-            const checkUserExists = await db.query("SELECT 1 FROM users WHERE steam_id= $1", [steamUser.id]);
+            // Verify that the user exists by checking if they own any games
+            const checkUserExists = await db.query("SELECT 1 FROM user_games WHERE steam_id= $1 limit 1", [steamUser.id]);
             const checkUserExistsResult : number = checkUserExists.rows[0]['?column?'];
 
-            // The user does not have a library stored
+            // The user does not exist - the user does not have a library stored
             if(checkUserExistsResult != 1){
 
                 //Fetch the user library from the Steam API and record their library and playtimes
@@ -136,7 +136,8 @@ export const postUserGames = async (req: Request, res: Response) => {
                      "playtime_forever": 1146,
                  */
                 return res.send(gamesFromAPI)
-            }else{
+            }
+            else{
                 // The User has a library stored (syncing must be supported later)
                 // Retrieve it from the database
                 const query : string = `

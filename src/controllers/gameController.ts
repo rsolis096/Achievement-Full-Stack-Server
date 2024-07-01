@@ -246,7 +246,7 @@ const addHasVisibleStats = async (games: OwnedGame[]) => {
             .join(',');
 
         if (updates.length === 0) continue; // Skip empty batches
-        
+
         const queryText = `
             UPDATE games
             SET has_community_visible_stats = updates.has_community_visible_stats
@@ -262,7 +262,7 @@ const addHasVisibleStats = async (games: OwnedGame[]) => {
     }
 };
 
-//Write the users Owned Games to the Owned Games Table
+//Write the users Owned Games to the Owned Games Table (batch processing necessary for render hosting)
 const addUserLibrary = async (userId: string, games: OwnedGame[]) => {
     const batchSize: number = 20
     for (let i = 0; i < games.length; i += batchSize) {
@@ -291,7 +291,7 @@ const addUserLibrary = async (userId: string, games: OwnedGame[]) => {
 //This endpoint is used to build the database of all games and is not meant to be used regularly
 //Each game is returned as the type Game but only with appid and name.
 //This endpoint should be scheduled weekly to build a library of new games
-const getAllApps = async () =>{
+const getAllAppsV1 = async () =>{
     console.log("inside get all apps")
     try{
 
@@ -369,3 +369,41 @@ const getAllApps = async () =>{
     }
 
 };
+
+export const getAllAppsV2 = async (req : Request, res : Response) => {
+    console.log("inside get all apps V2");
+  
+    try {
+      // Get Games from Steam API
+      const response: AxiosResponse = await axios.get(`https://api.steampowered.com/ISteamApps/GetAppList/v2/?key=${webAPIKey}`);
+      const data: App[] = response.data.applist.apps;
+  
+      // Filter out apps without names
+      const filteredData = data.filter(game => game.name.length > 0);
+  
+      // Write games to database in batches
+      const batchSize = 500;
+      for (let i = 0; i < filteredData.length; i += batchSize) {
+        const batch = filteredData.slice(i, i + batchSize);
+        const values = batch.map(game => `(${game.appid}, '${game.name.replace(/'/g, "''")}')`).join(',');
+  
+        const queryText = `
+          INSERT INTO games (appid, name)
+          VALUES ${values}
+          ON CONFLICT (appid) DO NOTHING;
+        `;
+  
+        try {
+          await db.query(queryText);
+          console.log(`Successfully wrote batch ${Math.ceil((i + batchSize) / batchSize)}`);
+        } catch (error) {
+          console.error('Error executing batch update:', error);
+        }
+      }
+      return res.json({success: "Written all Apps to database"})
+    } catch (error) {
+      const err = error as AxiosError;
+      console.log("Error in getAllAppsV2: ", err);
+      return res.json({error: "Failed to write to database", message: err})
+    }
+  };

@@ -4,6 +4,7 @@ import axios, {AxiosError, AxiosResponse} from 'axios';
 import db from '../db/dbConfig.js';
 
 import {GameAchievement, UserAchievement, SteamUser, extractSteamUser, Game} from "../Interfaces/types.js";
+import { time } from 'console';
 
 const webAPIKey = process.env.WEB_API_KEY as string; //small one
 const demoSteamId= process.env.DEMO_STEAM_ID as string
@@ -11,6 +12,10 @@ const demoSteamId= process.env.DEMO_STEAM_ID as string
 //Corresponds to GameAchievement Type
 const getGameAchievementsURL = `https://api.steampowered.com/IPlayerService/GetGameAchievements/v1/?key=${webAPIKey}&language=english&appid=`;
 
+interface Result {
+    userAchievements: UserAchievement[];
+    time: number;
+}
 
 /*##################
   MAIN ENDPOINTS
@@ -21,9 +26,14 @@ Retrieves the users unlock statistics for a game given the appid passed in the r
 It returns an array of UserAchievement items.
 */
 export const postUserAchievements = async (req: Request, res: Response) => {
+
+    if(!req.body.appid){
+        return res.json({error: "Please include an appid in the request body"})
+    }
+
     try {
         let steamUser : SteamUser = {} as SteamUser
-
+        let syncRequested : boolean = false;
         if(req.body.demo){
             req.user = { id: demoSteamId }; //This enables authentication automatically
             steamUser.id = demoSteamId;
@@ -31,21 +41,50 @@ export const postUserAchievements = async (req: Request, res: Response) => {
             steamUser = extractSteamUser(req.user);
         }
 
-        //First attempt to get the library from the database
-        const responseFromDB: UserAchievement[] = await fetchUserAchievementsFromDB(req.body.appid, steamUser.id)
-        if(responseFromDB) { //Can be null if not in database yet, would need to write it if it is
-            if (responseFromDB.length > 0) {
-                console.log("User Achievements sent via database for appid: ", req.body.appid)
-                return res.send(responseFromDB);
-            }
+        if(req.body.sync){
+            console.log("Sync Request made")
+            syncRequested = true;
         }
 
-        //If above fails, attempt to get the user library from Steam
-        const achievementsFromAPI: UserAchievement[] = await fetchUserAchievementsFromSteamAPI(req.body.appid, steamUser.id)
-        if(achievementsFromAPI.length > 0) {
-            console.log("User Achievements sent via Steam API for appid: ", req.body.appid)
-            return res.send(achievementsFromAPI);
+        // The app being checked
+        const appid = req.body.appid;
+
+        //Attempt to get the library from the database
+        const responseFromDB: Result = await fetchUserAchievementsFromDB(appid, steamUser.id)
+
+        //If the response is not null
+        if(responseFromDB.userAchievements) {
+
+            const userAchievements = responseFromDB.userAchievements
+            const lastSync = responseFromDB.time;
+
+            //If sync is requested, verify an adequate amount of time has passed
+            if(syncRequested && lastSync > 20){
+                //If above return null or a sync request is made, attempt to get the user achievements from Steam
+                const responseFromAPI: UserAchievement[] = await fetchUserAchievementsFromSteamAPI(appid, steamUser.id)
+                
+                if(responseFromAPI.length > 0) {
+                    console.log("User Achievements sent via Steam API for appid: ", appid)
+                    return res.send(responseFromAPI);
+                }
+            }
+            //If a sync is not requested, return database result as normal
+            else {
+                console.log("User Achievements sent via database for appid: ", req.body.appid)
+                return res.send(userAchievements);
+            }
+
         }
+
+        //If above return null, attempt to get the user achievements from Steam
+        const responseFromAPI: UserAchievement[] = await fetchUserAchievementsFromSteamAPI(appid, steamUser.id)
+        
+        if(responseFromAPI.length > 0) {
+            console.log("User Achievements sent via Steam API for appid: ", appid)
+            return res.send(responseFromAPI);
+        }
+        
+
     }
     catch(error){
         const err = error as AxiosError
@@ -148,15 +187,21 @@ const fetchUserAchievementsFromDB = async (appid : string, steam_id : string) =>
 
     try{
         // Attempt to get from database
-        const queryText: string = 'SELECT ua.user_achievements FROM user_games ua WHERE ua.steam_id = $1 AND ua.appid = $2'
+        const queryText: string = 'SELECT ua.user_achievements, last_sync FROM user_games ua WHERE ua.steam_id = $1 AND ua.appid = $2'
         const result = await db.query(queryText, [steam_id, appid]);
+
+        //Time comparison
+        const current_time = new Date().getTime();
+        const last_sync  = new Date(result.rows[0].last_sync).getTime();
+        const timeDifference : number = (current_time - last_sync) / (60 * 1000); 
+
         const achievementsFromDB: UserAchievement[] = result.rows[0].user_achievements;
-        return achievementsFromDB;
+        return { userAchievements: achievementsFromDB, time : timeDifference} as Result
     }
     catch(error){
         const err = error as AxiosError
         console.log("Error in fetchUserAchievementsFromDB: ", err)
-        return [] as UserAchievement[]
+        return { userAchievements: [] as UserAchievement[], time : 0 } as Result
     }
 }
 
@@ -171,16 +216,16 @@ const fetchUserAchievementsFromSteamAPI = async (appid : string, steamId :string
         const getUserAchievementsURL = `https://api.steampowered.com/ISteamUserStats/GetPlayerAchievements/v1/?key=${webAPIKey}&steamid=${steamId}&appid=`;
         const response: AxiosResponse = await axios.get(getUserAchievementsURL.concat(appid.toString()));
         const achievementsFromAPI: UserAchievement[] = response.data.playerstats.achievements;
-        //Update the Database with the retrieved info
+        //Update the Database with the retrieved info and latest sync time
         if (achievementsFromAPI.length > 0) {
-            const queryText = 'UPDATE user_games SET user_achievements = $1 WHERE appid = $2';
+            const queryText = 'UPDATE user_games SET user_achievements = $1, last_sync = NOW() WHERE appid = $2;';
             try {
                 await db.query(queryText, [JSON.stringify(achievementsFromAPI), appid]);
             }catch(error){
                 console.error('Error executing query to write to database:', error);
             }
         }
-        return achievementsFromAPI;
+        return achievementsFromAPI
     }
     catch(error){
         //const err = error as AxiosError

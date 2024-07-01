@@ -115,7 +115,7 @@ export const postUserGames = async (req: Request, res: Response) => {
 
                 const responseAPI: AxiosResponse = await axios.get(getOwnedAppsURL);
                 const gamesFromAPI: OwnedGame[] = responseAPI.data.response.games;
-
+                res.send(gamesFromAPI)
                 //Update the global database to specify if a game has achievements or not
                 await addHasVisibleStats(gamesFromAPI);
 
@@ -134,7 +134,7 @@ export const postUserGames = async (req: Request, res: Response) => {
                      "has_community_visible_stats": true,
                      "playtime_forever": 1146,
                  */
-                return res.send(gamesFromAPI)
+                return 
             }
             else{
                 // The User has a library stored (syncing must be supported later)

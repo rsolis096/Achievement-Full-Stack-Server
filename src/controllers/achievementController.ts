@@ -15,7 +15,10 @@ const getGameAchievementsURL = `https://api.steampowered.com/IPlayerService/GetG
 interface Result {
     userAchievements: UserAchievement[];
     time: number;
+    last_sync: string;
 }
+
+
 
 /*##################
   MAIN ENDPOINTS
@@ -49,6 +52,16 @@ export const postUserAchievements = async (req: Request, res: Response) => {
         // The app being checked
         const appid = req.body.appid;
 
+        //Current time
+        const timeToReturn = new Date().toLocaleString('en-US', {
+            year: '2-digit',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true,
+          });;
+
         //Attempt to get the library from the database
         const responseFromDB: Result = await fetchUserAchievementsFromDB(appid, steamUser.id)
 
@@ -56,22 +69,23 @@ export const postUserAchievements = async (req: Request, res: Response) => {
         if(responseFromDB.userAchievements) {
 
             const userAchievements = responseFromDB.userAchievements
-            const lastSync = responseFromDB.time;
+            const timeSinceSync = responseFromDB.time;
+            const lastSync = responseFromDB.last_sync
 
             //If sync is requested, verify an adequate amount of time has passed
-            if(syncRequested && lastSync > 20){
+            if(syncRequested && timeSinceSync > 20){
                 //If above return null or a sync request is made, attempt to get the user achievements from Steam
                 const responseFromAPI: UserAchievement[] = await fetchUserAchievementsFromSteamAPI(appid, steamUser.id)
                 
                 if(responseFromAPI.length > 0) {
                     console.log("User Achievements sent via Steam API for appid: ", appid)
-                    return res.send(responseFromAPI);
+                    return res.json({userAchievements : responseFromAPI, time: 0, last_sync : timeToReturn} as Result);
                 }
             }
             //If a sync is not requested, return database result as normal
             else {
-                console.log("User Achievements sent via database for appid: ", req.body.appid)
-                return res.send(userAchievements);
+                console.log("User Achievements sent via database for appid: ", appid)
+                return res.json({userAchievements : userAchievements, time : 0, last_sync : lastSync} as Result);
             }
 
         }
@@ -81,7 +95,8 @@ export const postUserAchievements = async (req: Request, res: Response) => {
         
         if(responseFromAPI.length > 0) {
             console.log("User Achievements sent via Steam API for appid: ", appid)
-            return res.send(responseFromAPI);
+
+            return res.json({userAchievements : responseFromAPI, time: 0, last_sync : timeToReturn} as Result);
         }
         
 
@@ -194,9 +209,16 @@ const fetchUserAchievementsFromDB = async (appid : string, steam_id : string) =>
         const current_time = new Date().getTime();
         const last_sync  = new Date(result.rows[0].last_sync).getTime();
         const timeDifference : number = (current_time - last_sync) / (60 * 1000); 
-
+        const timeToReturn : string = new Date(result.rows[0].last_sync) .toLocaleString('en-US', {
+            year: '2-digit',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true,
+          });
         const achievementsFromDB: UserAchievement[] = result.rows[0].user_achievements;
-        return { userAchievements: achievementsFromDB, time : timeDifference} as Result
+        return { userAchievements: achievementsFromDB, time : timeDifference, last_sync : timeToReturn} as Result
     }
     catch(error){
         const err = error as AxiosError

@@ -64,9 +64,8 @@ export const postUserAchievements = async (req: Request, res: Response) => {
 
         //Attempt to get the library from the database
         const responseFromDB: Result = await fetchUserAchievementsFromDB(appid, steamUser.id)
-
         //If the response is not null
-        if(responseFromDB.userAchievements) {
+        if(responseFromDB.userAchievements.length > 0) {
 
             const userAchievements = responseFromDB.userAchievements
             const timeSinceSync = responseFromDB.time;
@@ -75,11 +74,11 @@ export const postUserAchievements = async (req: Request, res: Response) => {
             //If sync is requested, verify an adequate amount of time has passed
             if(syncRequested && timeSinceSync > 20){
                 //If above return null or a sync request is made, attempt to get the user achievements from Steam
-                const responseFromAPI: UserAchievement[] = await fetchUserAchievementsFromSteamAPI(appid, steamUser.id)
+                const responseFromAPI: Result = await fetchUserAchievementsFromSteamAPI(appid, steamUser.id)
                 
-                if(responseFromAPI.length > 0) {
+                if(responseFromAPI.userAchievements.length > 0) {
                     console.log("User Achievements sent via Steam API for appid: ", appid)
-                    return res.json({userAchievements : responseFromAPI, time: 0, last_sync : timeToReturn} as Result);
+                    return res.json({userAchievements : responseFromAPI.userAchievements, time: 0, last_sync : timeToReturn, message:"success"} as Result);
                 }
             }
             //If a sync is not requested, return database result as normal
@@ -90,16 +89,16 @@ export const postUserAchievements = async (req: Request, res: Response) => {
 
         }
 
-        //If above return null, attempt to get the user achievements from Steam
-        const responseFromAPI: UserAchievement[] = await fetchUserAchievementsFromSteamAPI(appid, steamUser.id)
-        
-        if(responseFromAPI.length > 0) {
+        //If above returns null or empty, attempt to get the user achievements from Steam
+        const responseFromAPI: Result = await fetchUserAchievementsFromSteamAPI(appid, steamUser.id)
+
+        if(responseFromAPI.userAchievements.length > 0) {
             console.log("User Achievements sent via Steam API for appid: ", appid)
-
-            return res.json({userAchievements : responseFromAPI, time: 0, last_sync : timeToReturn} as Result);
+            return res.json({userAchievements : responseFromAPI.userAchievements, time: 0, last_sync : timeToReturn, message:"success"} as Result);
         }
-        
 
+        return res.json({userAchievements : [] as UserAchievement[], time: 0, last_sync : "null", message:"failure"} as Result);
+        
     }
     catch(error){
         const err = error as AxiosError
@@ -204,7 +203,9 @@ const fetchUserAchievementsFromDB = async (appid : string, steam_id : string) =>
         // Attempt to get from database
         const queryText: string = 'SELECT ua.user_achievements, last_sync FROM user_games ua WHERE ua.steam_id = $1 AND ua.appid = $2'
         const result = await db.query(queryText, [steam_id, appid]);
-
+        if(!result.rows[0].user_achievements){
+            throw new Error("User Achievements returned null from database")
+        }
         //Time comparison
         const current_time = new Date().getTime();
         const last_sync  = new Date(result.rows[0].last_sync).getTime();
@@ -221,9 +222,12 @@ const fetchUserAchievementsFromDB = async (appid : string, steam_id : string) =>
         return { userAchievements: achievementsFromDB, time : timeDifference, last_sync : timeToReturn} as Result
     }
     catch(error){
-        const err = error as AxiosError
-        console.log("Error in fetchUserAchievementsFromDB: ", err)
-        return { userAchievements: [] as UserAchievement[], time : 0 } as Result
+        if (error instanceof Error) {
+            console.error("Error in fetchUserAchievementsFromDB: ", error.message);
+          } else {
+            console.error("Unknown error in fetchUserAchievementsFromDB: ", error);
+          }        
+        return { userAchievements: [] as UserAchievement[], time : 0, last_sync: "null", message : "failure" } as Result
     }
 }
 
@@ -247,11 +251,14 @@ const fetchUserAchievementsFromSteamAPI = async (appid : string, steamId :string
                 console.error('Error executing query to write to database:', error);
             }
         }
-        return achievementsFromAPI
+        return { userAchievements: achievementsFromAPI, time : 0, last_sync: "null", message : "success" } as Result
     }
     catch(error){
-        //const err = error as AxiosError
-        console.log("Error in fetchUserAchievementsFromDB: ")
-        return [] as UserAchievement[]
+        if (error instanceof Error) {
+            console.error("Error in fetchUserAchievementsFromDB: ", error.message);
+          } else {
+            console.error("Unknown error in fetchUserAchievementsFromDB: ", error);
+          }        
+        return { userAchievements: [] as UserAchievement[], time : 0, last_sync: "null", message : "failure" } as Result
     }
 }

@@ -102,20 +102,23 @@ export const postUserGames = async (req: Request, res: Response) => {
             console.log("Request to get user games made!")
             const steamUser: SteamUser = extractSteamUser(req.user);
 
-            // Verify that the user exists by checking if they own any games
+            // Verify that the user exists by checking if they own any games in the database
             const checkUserExists = await db.query("SELECT 1 FROM user_games WHERE steam_id= $1 limit 1", [steamUser.id]);
+
             //If nothing is returned, the user has no library and it should be retrieved from the api
             const checkUserExistsResult : boolean = checkUserExists.rows.length == 0 ? false : true;
-            // The user does not exist - the user does not have a library stored
             if(!checkUserExistsResult){
-                //Fetch the user library from the Steam API and record their library and playtimes
-                
                 //Fetch the user library from the steam API
                 const getOwnedAppsURL = `https://api.steampowered.com/IPlayerService/GetOwnedGames/v1/?access_token=${accessToken}&steamid=${steamUser.id}&include_appinfo=true`;
 
                 const responseAPI: AxiosResponse = await axios.get(getOwnedAppsURL);
                 const gamesFromAPI: OwnedGame[] = responseAPI.data.response.games;
-                res.send(gamesFromAPI)
+                if(gamesFromAPI.length){
+                    res.send(gamesFromAPI)
+                }else{
+                    res.send([] as OwnedGame[])
+                }
+                //Send the response to the client then write to database 
                 //Update the global database to specify if a game has achievements or not
                 await addHasVisibleStats(gamesFromAPI);
 

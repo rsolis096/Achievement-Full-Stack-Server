@@ -67,6 +67,7 @@ passport.use(new SteamStrategy({
             //Verify User Exists in database using steamID
             await findUserBySteamId(profile.id).then((e : boolean) => {
                 exists = e;
+                console.log("Profile: ", profile)
                 //Create new user if necessary
                 if (!exists) {
                     console.log("Value does not exist in database, writing it now.")

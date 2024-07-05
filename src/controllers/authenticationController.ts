@@ -2,6 +2,9 @@ import { Request, Response } from 'express';
 
 import db from '../db/dbConfig.js';
 
+import { extractSteamUser } from '../Interfaces/types.js';
+import { Query } from 'pg';
+
 const CLIENT_DOMAIN = process.env.CLIENT_DOMAIN as string;
 
 export const findUserBySteamId = async (steamId : string) => {
@@ -62,4 +65,36 @@ export const logout = async (req: Request, res: Response) => {
     req.session = null as any;
     return res.json({ authenticated: req.isAuthenticated() });
 }
+
+//get for testing, should be post since client requests it (authenticationRouter)
+export const deleteAccount = async (req: Request, res: Response) => {
+
+    //Delete the user data
+    if(req.user){
+        const steamId = extractSteamUser(req.user).id;
+        const queryUsers : string = "DELETE FROM users WHERE steam_id = $1"
+        const queryUserGames : string = "DELETE FROM user_games WHERE steam_id = $1"
+        try {
+            const resultUserGames = await db.query(queryUserGames, [steamId]);
+            const resultUsers = await db.query(queryUsers, [steamId]);
+            console.log(`Deleted ${resultUsers.rowCount} rows from users`);
+            console.log(`Deleted ${resultUserGames.rowCount} rows from user_games`);
+
+          } catch (error) {
+            console.error('Error deleting user rows:', error);
+            return res.json({ authenticated: req.isAuthenticated(), success: false, message: "An error occurred during the deletion process" });
+          }    
+        }
+
+    //Logout the user
+    req.logOut((err: any) => {
+        if (err) {
+            return res.status(500).send({ message: 'Logout failed: ' + err });
+        }
+    });
+    req.session = null as any;
+    req.user = null as any;
+    return res.json({ authenticated: req.isAuthenticated(), success: true, message: "successfully deleted user info" });
+    }
+
 

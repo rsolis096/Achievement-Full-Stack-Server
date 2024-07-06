@@ -60,6 +60,7 @@ export const postUserAchievements = async (req: Request, res: Response) => {
             hour: '2-digit',
             minute: '2-digit',
             hour12: true,
+            timeZone: "UTC"
           });;
 
         //Attempt to get the library from the database
@@ -69,7 +70,7 @@ export const postUserAchievements = async (req: Request, res: Response) => {
 
             const userAchievements = responseFromDB.userAchievements
             const timeSinceSync = responseFromDB.time;
-            const lastSync = responseFromDB.last_sync
+            const lastSync = responseFromDB.last_sync; //A value in UTC
 
             //If sync is requested, verify an adequate amount of time has passed
             if(syncRequested && timeSinceSync > 20){
@@ -208,15 +209,16 @@ const fetchUserAchievementsFromDB = async (appid : string, steam_id : string) =>
         }
         //Time comparison
         const current_time = new Date().getTime();
-        const last_sync  = new Date(result.rows[0].last_sync).getTime();
-        const timeDifference : number = (current_time - last_sync) / (60 * 1000); 
-        const timeToReturn : string = new Date(result.rows[0].last_sync) .toLocaleString('en-US', {
+        const last_sync  = new Date(result.rows[0].last_sync);
+        const timeDifference : number = (current_time - last_sync.getTime()) / (60 * 1000); 
+        const timeToReturn : string = new Date(result.rows[0].last_sync).toLocaleString('en-US', {
             year: '2-digit',
             month: '2-digit',
             day: '2-digit',
             hour: '2-digit',
             minute: '2-digit',
             hour12: true,
+            timeZone: "UTC",
           });
         const achievementsFromDB: UserAchievement[] = result.rows[0].user_achievements;
         return { userAchievements: achievementsFromDB, time : timeDifference, last_sync : timeToReturn} as Result

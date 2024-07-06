@@ -10,7 +10,6 @@ const webAPIKey = process.env.WEB_API_KEY as string; // small one
 const accessToken = process.env.ACCESS_TOKEN as string; // long, 24 hour one
 
 //Returns a list of appids of current top games
-const getAllAppsURL :string = `https://api.steampowered.com/IStoreService/GetAppList/v1/?key=${webAPIKey}`
 const getTopWeeklySellersURL : string =`https://api.steampowered.com/IStoreTopSellersService/GetWeeklyTopSellers/v1/?access_token=${accessToken}
 &country_code=ca&input_json=%7B%22context%22%3A%7B%22language%22%3A%22english%22%2C%22country_code%22%3A%22ca%22%7D%7D`
 const getMostPlayedURL : string = `https://api.steampowered.com/ISteamChartsService/GetMostPlayedGames/v1/?key=${webAPIKey}`
@@ -291,11 +290,10 @@ const addUserLibrary = async (userId: string, games: OwnedGame[]) => {
   SCHEDULED FUNCTIONS
 ##################*/
 
-//This endpoint is used to build the database of all games and is not meant to be used regularly
-//Each game is returned as the type Game but only with appid and name.
-//This endpoint should be scheduled weekly to build a library of new games
+//V1 returns a list of games in a page format, although it does appear to miss some games, v2 preferred
+//It only returns appid and name
 const getAllAppsV1 = async () =>{
-    console.log("inside get all apps")
+    const getAllAppsURL :string = `https://api.steampowered.com/IStoreService/GetAppList/v1/?key=${webAPIKey}`
     try{
 
         //Initialize Game Data array
@@ -373,6 +371,8 @@ const getAllAppsV1 = async () =>{
 
 };
 
+//V2 Returns a list of all games
+//It only returns appid and name
 export const getAllAppsV2 = async (req : Request, res : Response) => {
     console.log("inside get all apps V2");
   

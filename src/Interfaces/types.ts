@@ -6,9 +6,24 @@ export interface OwnedGame {
 }
 
 export interface App{
-    type: string, //"game" or "dlc"
+    type: string, //"game", "dlc", "hardware", etc
     name: string;
     appid: number;
+    detailed_app?: {
+        legal_notice : string;
+        publishers : string[];
+        developers : string[];
+        release_date : string;
+        price_overview? : { 
+            currency : string;
+            final_formatted : string;
+            initial_formatted : string;
+        }
+        achievements? :{
+            total : number;
+        }
+
+    }
 }
 
 export interface GameAchievement {

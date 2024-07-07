@@ -18,17 +18,62 @@ const getAppInfoURL : string = `https://store.steampowered.com/api/appdetails?ap
   MAIN ENDPOINTS
 ##################*/
 
-export const getAppInfo = async (req : Request, res:Response) => {
-    const appid : string = req.body.appid
-    const responseAPI : AxiosResponse = await axios.get(getAppInfoURL + appid)
-    const data : App =
-    {
-        name: responseAPI.data[appid].data.name,
-        type: responseAPI.data[appid].data.type,
-        appid: parseInt(appid)
+
+export const getAppInfo = async (req: Request, res: Response): Promise<Response> => {
+    const appid: string = req.body.appid;
+  
+    try {
+      // Check if the data is in the database
+      const query: string = 'SELECT info FROM games WHERE appid = $1';
+      const responseFromDB = await db.query(query, [appid]);
+      const dataFromDB: App | undefined = responseFromDB.rows[0]?.info;
+  
+      // If it is, send it to the user
+      if (dataFromDB) {
+        console.log("Game info sent from DB")
+        return res.send(dataFromDB);
+      }
+  
+      // Retrieves app info from Steam API
+      const responseAPI: AxiosResponse = await axios.get(`${getAppInfoURL}${appid}`);
+      const responseData = responseAPI.data[appid].data;
+      
+      const data: App = {
+        name: responseData.name,
+        type: responseData.type,
+        appid: parseInt(appid, 10),
+        detailed_app: {
+          legal_notice: responseData.legal_notice,
+          publishers: responseData.publishers,
+          developers: responseData.developers,
+          release_date: responseData.release_date.date,
+          price_overview: responseData.price_overview ? {
+            currency: responseData.price_overview.currency,
+            final_formatted: responseData.price_overview.final_formatted,
+            initial_formatted: responseData.price_overview.initial_formatted,
+          } : undefined,
+          achievements: responseData.achievements ? {
+            total: responseData.achievements.total,
+          } : undefined,
+        }
+      };
+  
+      // Write this data to the database
+      try {
+        const queryText: string = 'UPDATE games SET info = $1 WHERE appid = $2';
+        await db.query(queryText, [JSON.stringify(data), appid]);
+      } catch (dbError) {
+        console.error('Error updating database:', dbError);
+      }
+
+      console.log("Game info sent from API")
+      // Send it to the user
+      return res.send(data);
+    } catch (error) {
+      console.error('Error fetching app info:', error);
+      return res.status(500).send({ error: 'Failed to fetch app info' });
     }
-    return res.send(data);
-}
+  };
 
 export const getMostPlayedGames = async (req: Request, res: Response) => {
     try{

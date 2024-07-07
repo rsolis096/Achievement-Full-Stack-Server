@@ -1,9 +1,13 @@
-GetPlayerAchievements - Returns coded steam Achievement by appID for user with steamid
+## GetPlayerAchievements - Returns coded steam Achievement by appID for user with steamid
 https://api.steampowered.com/ISteamUserStats/GetPlayerAchievements/v1/?key=X&steamid=X&appid=X
 
 
-GetOwnedGames - Returns a list of the players games
+
+## GetOwnedGames - Returns a list of the players games
 https://api.steampowered.com/IPlayerService/GetOwnedGames/v1/?key=&steamid=&include_appinfo=true
+
+
+
 
 
 ## Returns a list of all apps on steam (appid, name)
@@ -12,6 +16,10 @@ https://api.steampowered.com/ISteamApps/GetAppList/v2/?key=
 - Games in  .applist.apps as :
 appid: number
 name : string
+
+##Return global achievement data for a game given app id
+https://api.steampowered.com/IPlayerService/GetGameAchievements/v1/?key=&language=english&appid=
+
 
 
 
@@ -50,3 +58,42 @@ rank : number,
 appid:number,  
 concurrent_in_game: number,
 peak_in_game: number
+
+
+## Returns a detailed list of information about a given app
+https://store.steampowered.com/api/appdetails?appids=
+
+- .[appid].data.achievements.total => Total number of achievements
+- .[appid].data.release_date => App release date
+- .[appid].data.type => Returns "game" for game, "dlc" for dlc
+
+- Lots of dev info
+- .[appid].data.legal_notice
+- .[appid].data.publishers
+- .[appid].data.developers
+- .[appid].data.price_overview.currency => Store Currency
+- .[appid].data.price_overview.final_formatted => Current Price
+- .[appid].data.price_overview.initial_formatted => Initial Price
+
+## Returns appid review info
+https://store.steampowered.com/appreviews/720?json=1&num_per_page=0
+- .query_summary.review_score_desc => "Mostly Positive" etc
+- .query_summary.total_positive => Number of positive reviews
+- .query_summary.total_negative => Number of negative reviews
+- .query_summary.total_reviews => Total Reviews
+
+
+## Returns a list of games (name and banner url)
+https://store.steampowered.com/search/results/&filter=?json=1
+- filter = topSellers, globalTopSellers, weeklongdeals
+
+
+##Returns a list of games via text search
+https://steamcommunity.com/actions/SearchApps/final%20fantasy
+{
+    "appid": "1462040",
+    "name": "FINAL FANTASY VII REMAKE INTERGRADE",
+    "icon": "",
+    "logo": ""
+},
+...

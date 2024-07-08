@@ -7,10 +7,9 @@ import {OwnedGame, SteamUser, extractSteamUser, App, WeeklyGame} from "../Interf
 //Important Steam API values
 const demoSteamId= process.env.DEMO_STEAM_ID as string
 const webAPIKey = process.env.WEB_API_KEY as string; // small one
-const accessToken = process.env.ACCESS_TOKEN as string; // long, 24 hour one
 
 //Returns a list of appids of current top games
-const getTopWeeklySellersURL : string =`https://api.steampowered.com/IStoreTopSellersService/GetWeeklyTopSellers/v1/?access_token=${accessToken}
+const getTopWeeklySellersURL : string =`https://api.steampowered.com/IStoreTopSellersService/GetWeeklyTopSellers/v1/?key=${webAPIKey}
 &country_code=ca&input_json=%7B%22context%22%3A%7B%22language%22%3A%22english%22%2C%22country_code%22%3A%22ca%22%7D%7D`
 const getMostPlayedURL : string = `https://api.steampowered.com/ISteamChartsService/GetMostPlayedGames/v1/?key=${webAPIKey}`
 const getAppInfoURL : string = `https://store.steampowered.com/api/appdetails?appids=`
@@ -153,7 +152,7 @@ export const postUserGames = async (req: Request, res: Response) => {
             const checkUserExistsResult : boolean = checkUserExists.rows.length == 0 ? false : true;
             if(!checkUserExistsResult){
                 //Fetch the user library from the steam API
-                const getOwnedAppsURL = `https://api.steampowered.com/IPlayerService/GetOwnedGames/v1/?access_token=${accessToken}&steamid=${steamUser.id}&include_appinfo=true`;
+                const getOwnedAppsURL = `https://api.steampowered.com/IPlayerService/GetOwnedGames/v1/?key=${webAPIKey}&steamid=${steamUser.id}&include_appinfo=true`;
 
                 const responseAPI: AxiosResponse = await axios.get(getOwnedAppsURL);
                 const gamesFromAPI: OwnedGame[] = responseAPI.data.response.games;

@@ -7,10 +7,9 @@ import {OwnedGame, SteamUser, extractSteamUser, App, WeeklyGame} from "../Interf
 //Important Steam API values
 const demoSteamId= process.env.DEMO_STEAM_ID as string
 const webAPIKey = process.env.WEB_API_KEY as string; // small one
-const accessToken = process.env.ACCESS_TOKEN as string; // long, 24 hour one
 
 //Returns a list of appids of current top games
-const getTopWeeklySellersURL : string =`https://api.steampowered.com/IStoreTopSellersService/GetWeeklyTopSellers/v1/?access_token=${accessToken}
+const getTopWeeklySellersURL : string =`https://api.steampowered.com/IStoreTopSellersService/GetWeeklyTopSellers/v1/?key=${webAPIKey}
 &country_code=ca&input_json=%7B%22context%22%3A%7B%22language%22%3A%22english%22%2C%22country_code%22%3A%22ca%22%7D%7D`
 const getMostPlayedURL : string = `https://api.steampowered.com/ISteamChartsService/GetMostPlayedGames/v1/?key=${webAPIKey}`
 const getAppInfoURL : string = `https://store.steampowered.com/api/appdetails?appids=`
@@ -18,17 +17,62 @@ const getAppInfoURL : string = `https://store.steampowered.com/api/appdetails?ap
   MAIN ENDPOINTS
 ##################*/
 
-export const getAppInfo = async (req : Request, res:Response) => {
-    const appid : string = req.body.appid
-    const responseAPI : AxiosResponse = await axios.get(getAppInfoURL + appid)
-    const data : App =
-    {
-        name: responseAPI.data[appid].data.name,
-        type: responseAPI.data[appid].data.type,
-        appid: parseInt(appid)
+
+export const getAppInfo = async (req: Request, res: Response): Promise<Response> => {
+    const appid: string = req.body.appid;
+  
+    try {
+      // Check if the data is in the database
+      const query: string = 'SELECT info FROM games WHERE appid = $1';
+      const responseFromDB = await db.query(query, [appid]);
+      const dataFromDB: App | undefined = responseFromDB.rows[0]?.info;
+  
+      // If it is, send it to the user
+      if (dataFromDB) {
+        console.log("Game info sent from DB")
+        return res.send(dataFromDB);
+      }
+  
+      // Retrieves app info from Steam API
+      const responseAPI: AxiosResponse = await axios.get(`${getAppInfoURL}${appid}`);
+      const responseData = responseAPI.data[appid].data;
+      
+      const data: App = {
+        name: responseData.name,
+        type: responseData.type,
+        appid: parseInt(appid, 10),
+        detailed_app: {
+          legal_notice: responseData.legal_notice,
+          publishers: responseData.publishers,
+          developers: responseData.developers,
+          release_date: responseData.release_date.date,
+          price_overview: responseData.price_overview ? {
+            currency: responseData.price_overview.currency,
+            final_formatted: responseData.price_overview.final_formatted,
+            initial_formatted: responseData.price_overview.initial_formatted,
+          } : undefined,
+          achievements: responseData.achievements ? {
+            total: responseData.achievements.total,
+          } : undefined,
+        }
+      };
+  
+      // Write this data to the database
+      try {
+        const queryText: string = 'UPDATE games SET info = $1 WHERE appid = $2';
+        await db.query(queryText, [JSON.stringify(data), appid]);
+      } catch (dbError) {
+        console.error('Error updating database:', dbError);
+      }
+
+      console.log("Game info sent from API")
+      // Send it to the user
+      return res.send(data);
+    } catch (error) {
+      console.error('Error fetching app info:', error);
+      return res.status(500).send({ error: 'Failed to fetch app info' });
     }
-    return res.send(data);
-}
+  };
 
 export const getMostPlayedGames = async (req: Request, res: Response) => {
     try{
@@ -108,7 +152,7 @@ export const postUserGames = async (req: Request, res: Response) => {
             const checkUserExistsResult : boolean = checkUserExists.rows.length == 0 ? false : true;
             if(!checkUserExistsResult){
                 //Fetch the user library from the steam API
-                const getOwnedAppsURL = `https://api.steampowered.com/IPlayerService/GetOwnedGames/v1/?access_token=${accessToken}&steamid=${steamUser.id}&include_appinfo=true`;
+                const getOwnedAppsURL = `https://api.steampowered.com/IPlayerService/GetOwnedGames/v1/?key=${webAPIKey}&steamid=${steamUser.id}&include_appinfo=true`;
 
                 const responseAPI: AxiosResponse = await axios.get(getOwnedAppsURL);
                 const gamesFromAPI: OwnedGame[] = responseAPI.data.response.games;

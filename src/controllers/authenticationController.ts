@@ -3,7 +3,6 @@ import { Request, Response } from 'express';
 import db from '../db/dbConfig.js';
 
 import { extractSteamUser } from '../Interfaces/types.js';
-import { Query } from 'pg';
 
 const CLIENT_DOMAIN = process.env.CLIENT_DOMAIN as string;
 

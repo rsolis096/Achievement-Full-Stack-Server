@@ -4,9 +4,8 @@ import axios, {AxiosError, AxiosResponse} from 'axios';
 import db from '../db/dbConfig.js';
 
 import {GameAchievement, UserAchievement, SteamUser, extractSteamUser, Game} from "../Interfaces/types.js";
-import { time } from 'console';
 
-const webAPIKey = process.env.WEB_API_KEY as string; //small one
+const webAPIKey = process.env.WEB_API_KEY as string;
 const demoSteamId= process.env.DEMO_STEAM_ID as string
 
 //Corresponds to GameAchievement Type

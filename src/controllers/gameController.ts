@@ -190,7 +190,8 @@ export const postUserGames = async (req: Request, res: Response) => {
                         games.appid, 
                         games.name, 
                         games.has_community_visible_stats,
-                        user_games.playtime_forever   
+                        user_games.playtime_forever,
+                        user_games.tracking
                         FROM games
                         JOIN user_games ON games.appid = user_games.appid
                         WHERE user_games.steam_id = $1
@@ -251,7 +252,8 @@ export const postUserGamesSearch = async (req: Request, res: Response) => {
                 mg.appid,
                 mg.name,
                 mg.has_community_visible_stats,
-                ug.playtime_forever
+                ug.playtime_forever,
+                ug.tracking
             From
                 matched_games mg
             JOIN
@@ -276,6 +278,92 @@ export const postUserGamesSearch = async (req: Request, res: Response) => {
         return res.status(500).json({response: err})
     }
 };
+
+export const getTracklist = async (req: Request, res: Response) => {
+  try
+  {    
+    //Authenticate this request if its in demo mode
+    if(req.body.demo){
+        req.user = { id: demoSteamId }; //This enables authentication automatically
+    }
+    if(req.isAuthenticated()) {
+      const steamUser: SteamUser = extractSteamUser(req.user);
+      // The the user library based on tracked games from the database
+      const query : string = `
+          Select 
+              games.appid, 
+              games.name, 
+              games.has_community_visible_stats,
+              user_games.tracking,
+              user_games.playtime_forever   
+              FROM games
+              JOIN user_games ON games.appid = user_games.appid
+              WHERE user_games.steam_id = $1
+              AND games.has_community_visible_stats IS NOT NULL
+              AND user_games.tracking = true
+              LIMIT $2`
+
+        try {
+            const result = await db.query(query, [steamUser.id, req.body.count]);
+            const gamesFromDB: OwnedGame[] = result.rows;
+            //Return this response to the user
+            //Includes
+            /*
+                  "appid": 220,
+                  "name": "Half-Life 2",
+                  "has_community_visible_stats": true,
+                  "playtime_forever": 1146,
+              */
+            return res.send(gamesFromDB);
+        }
+        catch(error){
+            const err =error as AxiosError;
+            console.log(err)
+        }
+      }
+      res.send([] as OwnedGame[]);
+  }
+  catch (error) {
+      const err = error as AxiosError
+      //console.log(err)
+      return res.status(500).json({response: err})
+  }
+}
+
+export const updateTrackedItem = async (req: Request, res: Response) => {
+  try
+  {    
+    //Authenticate this request if its in demo mode
+    if(req.body.demo){
+        req.user = { id: demoSteamId }; //This enables authentication automatically
+    }
+    if(req.isAuthenticated()) {
+      const steamUser: SteamUser = extractSteamUser(req.user);
+      const appid : string = req.body.appid;
+      const value : string = req.body.value;
+
+      // The the user library based on tracked games from the database
+      const query : string = `update user_games set tracking = $1 where appid = $2 and steam_id = $3`
+
+
+        try {
+            const result = await db.query(query, [value, appid, steamUser.id]);
+            const gamesFromDB: OwnedGame[] = result.rows;
+            return res.json({response : `Updated with value ${value} where appid = ${appid} for user ${steamUser.id}`});
+        }
+        catch(error){
+            const err =error as AxiosError;
+            console.log(err)
+        }
+      }
+      return res.json({response : `Nothing updated`});
+    }
+  catch (error) {
+      const err = error as AxiosError
+      //console.log(err)
+      return res.status(500).json({response: err})
+  }
+}
 
 /*##################
   HELPER FUNCTIONS
@@ -454,3 +542,5 @@ export const getAllAppsV2 = async (req : Request, res : Response) => {
       return res.json({error: "Failed to write to database", message: err})
     }
   };
+
+

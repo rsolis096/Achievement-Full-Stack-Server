@@ -3,6 +3,7 @@ export interface OwnedGame {
     name: string;
     playtime_forever: number;
     has_community_visible_stats: boolean;
+    tracking? : boolean;
 }
 
 export interface App{
